@@ -6,6 +6,10 @@ from application.settings import AppSettings
 class Container(containers.DeclarativeContainer):
     """Application composition root."""
 
+    wiring_config = containers.WiringConfiguration(
+        modules=["presentation.http.routes.health"],
+    )
+
     settings = providers.Singleton(AppSettings)
 
 

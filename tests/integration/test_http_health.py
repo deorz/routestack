@@ -1,12 +1,8 @@
-from fastapi.testclient import TestClient
-
 from application.settings import AppSettings
-from infrastructure.container import create_container
-from presentation.http.app import create_app
 
 
-def test_healthcheck_returns_service_status() -> None:
-    client = TestClient(create_app())
+def test_healthcheck_returns_service_status(app_client_factory) -> None:
+    client = app_client_factory()
 
     response = client.get("/healthz")
 
@@ -14,10 +10,8 @@ def test_healthcheck_returns_service_status() -> None:
     assert response.json() == {"status": "ok", "service": "RouteStack"}
 
 
-def test_healthcheck_uses_settings_from_container() -> None:
-    container = create_container()
-    container.settings.override(AppSettings(app_name="InjectedStack"))
-    client = TestClient(create_app(container=container))
+def test_healthcheck_uses_settings_from_container(app_client_factory) -> None:
+    client = app_client_factory(AppSettings(app_name="InjectedStack"))
 
     response = client.get("/healthz")
 

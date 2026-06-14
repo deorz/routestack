@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,8 +12,5 @@ class AppSettings(BaseSettings):
     environment: str = "local"
     database_url: str = "sqlite:///./routestack.db"
     secret_key: str = "change-me-in-production"
-
-
-@lru_cache
-def get_settings() -> AppSettings:
-    return AppSettings()
+    server_host: str = "0.0.0.0"
+    server_port: int = 8000

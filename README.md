@@ -49,23 +49,11 @@ uv run python main.py
 Build and run the app container:
 
 ```bash
-docker compose up --build routestack-app
+docker compose up --build app
 ```
 
 Run tests inside Docker without host Python dependencies:
 
 ```bash
-docker compose -f docker-compose.yml -f compose.test.yml run --rm routestack-test
-```
-
-Start out-of-process integration dependencies:
-
-```bash
-docker compose --profile integration up -d routestack-postgres routestack-redis
-```
-
-Run the integration test container with those dependencies:
-
-```bash
-docker compose -f docker-compose.yml -f compose.test.yml --profile integration run --rm routestack-test-integration
+docker compose -f docker-compose.yml -f compose.test.yml run --rm test
 ```

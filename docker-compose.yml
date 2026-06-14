@@ -1,7 +1,5 @@
-name: routestack
-
 services:
-  routestack-app:
+  app:
     build:
       context: .
       target: runtime
@@ -12,38 +10,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - routestack-data:/data
-
-  routestack-postgres:
-    image: postgres:17-alpine
-    profiles:
-      - integration
-    environment:
-      POSTGRES_DB: routestack
-      POSTGRES_USER: routestack
-      POSTGRES_PASSWORD: routestack
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U routestack -d routestack"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    ports:
-      - "5432:5432"
-    volumes:
-      - routestack-postgres-data:/var/lib/postgresql/data
-
-  routestack-redis:
-    image: redis:7-alpine
-    profiles:
-      - integration
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    ports:
-      - "6379:6379"
+      - app-data:/data
 
 volumes:
-  routestack-data:
-  routestack-postgres-data:
+  app-data:

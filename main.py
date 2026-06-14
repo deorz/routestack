@@ -1,8 +1,17 @@
-import uvicorn
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+SRC_DIR = ROOT / "src"
+
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 
 def main() -> None:
-    uvicorn.run("presentation.http.app:create_app", factory=True, host="127.0.0.1", port=8000)
+    from presentation.http.cli import run
+
+    run()
 
 
 if __name__ == "__main__":
