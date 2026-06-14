@@ -56,27 +56,14 @@ class AccessGrant(Entity):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.subscription_id = ensure_entity_id(
-            self.subscription_id,
-            "subscription_id",
-        )
-        self.service_instance_id = ensure_entity_id(
-            self.service_instance_id,
-            "service_instance_id",
-        )
+        self.subscription_id = ensure_entity_id(self.subscription_id, "subscription_id")
+        self.service_instance_id = ensure_entity_id(self.service_instance_id, "service_instance_id")
         self.type = ensure_enum(self.type, AccessGrantType, "type")
         self.status = ensure_enum(self.status, AccessGrantStatus, "status")
         self.display_name = normalize_required_text(self.display_name, "display_name")
-        self.desired_state = ensure_enum(
-            self.desired_state,
-            AccessGrantState,
-            "desired_state",
-        )
+        self.desired_state = ensure_enum(self.desired_state, AccessGrantState, "desired_state")
         self.actual_state = ensure_enum(self.actual_state, AccessGrantState, "actual_state")
-        self.external_reference = normalize_optional_text(
-            self.external_reference,
-            "external_reference",
-        )
+        self.external_reference = normalize_optional_text(self.external_reference, "external_reference")
         self.last_error = normalize_optional_text(self.last_error, "last_error")
         self.created_at = ensure_utc(self.created_at, "created_at")
         self.updated_at = ensure_utc(self.updated_at, "updated_at")

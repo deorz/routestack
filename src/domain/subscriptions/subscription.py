@@ -36,15 +36,9 @@ class SubscriptionRevisionCreated(DomainEvent):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.subscription_id = ensure_entity_id(
-            self.subscription_id,
-            "subscription_id",
-        )
+        self.subscription_id = ensure_entity_id(self.subscription_id, "subscription_id")
         self.revision = ensure_positive_int(self.revision, "revision")
-        self.safe_change_summary = normalize_required_text(
-            self.safe_change_summary,
-            "safe_change_summary",
-        )
+        self.safe_change_summary = normalize_required_text(self.safe_change_summary, "safe_change_summary")
 
 
 @dataclass(slots=True, kw_only=True, eq=False)
@@ -65,10 +59,7 @@ class Subscription(Entity):
     def __post_init__(self) -> None:
         super().__post_init__()
         self.public_id = normalize_required_text(self.public_id, "public_id")
-        self.access_token_hash = normalize_required_text(
-            self.access_token_hash,
-            "access_token_hash",
-        )
+        self.access_token_hash = normalize_required_text(self.access_token_hash, "access_token_hash")
         self.name = normalize_required_text(self.name, "name")
 
         if self.public_id == self.access_token_hash:
