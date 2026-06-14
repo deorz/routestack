@@ -1,31 +1,24 @@
-from __future__ import annotations
+import time
+import uuid
+from secrets import randbits
+from uuid import UUID
 
-from dataclasses import dataclass
-from uuid import UUID, uuid4
-
-from domain.shared.errors import DomainValidationError
+EntityId = UUID
 
 
-@dataclass(frozen=True, slots=True)
-class EntityId:
-    value: UUID
+def new_entity_id() -> EntityId:
+    stdlib_uuid7 = getattr(uuid, "uuid7", None)
+    if stdlib_uuid7 is not None:
+        return stdlib_uuid7()
 
-    def __post_init__(self) -> None:
-        if not isinstance(self.value, UUID):
-            raise DomainValidationError("value must be a UUID")
+    return _uuid7_from_unix_ms(time.time_ns() // 1_000_000)
 
-    @classmethod
-    def new(cls) -> EntityId:
-        return cls(uuid4())
 
-    @classmethod
-    def from_string(cls, value: str) -> EntityId:
-        try:
-            parsed = UUID(value)
-        except (TypeError, ValueError) as exc:
-            raise DomainValidationError("invalid entity id") from exc
+def _uuid7_from_unix_ms(unix_ms: int) -> EntityId:
+    timestamp = (unix_ms & ((1 << 48) - 1)) << 80
+    version = 0x7 << 76
+    rand_a = randbits(12) << 64
+    variant = 0b10 << 62
+    rand_b = randbits(62)
 
-        return cls(parsed)
-
-    def __str__(self) -> str:
-        return str(self.value)
+    return UUID(int=timestamp | version | rand_a | variant | rand_b)

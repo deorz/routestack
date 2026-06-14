@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 
 from domain.access_grants.access_grant import (
@@ -5,15 +7,14 @@ from domain.access_grants.access_grant import (
     AccessGrantStatus,
     AccessGrantType,
 )
-from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError
 
 
 @pytest.fixture
 def grant() -> AccessGrant:
     return AccessGrant(
-        subscription_id=EntityId.new(),
-        service_instance_id=EntityId.new(),
+        subscription_id=uuid4(),
+        service_instance_id=uuid4(),
         type=AccessGrantType.VLESS_REALITY,
         display_name="Primary VLESS",
     )

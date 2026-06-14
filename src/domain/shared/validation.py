@@ -1,15 +1,26 @@
-from __future__ import annotations
-
 from collections.abc import Iterable
+from enum import Enum
+from typing import Any
 
 from domain.shared.errors import DomainValidationError
 
 
-def normalize_required_text(value: str, field_name: str) -> str:
-    if not isinstance(value, str):
-        raise DomainValidationError(f"{field_name} must be a string")
+def ensure_type(value: object, expected_type: type[Any], field_name: str) -> Any:
+    if not isinstance(value, expected_type):
+        raise DomainValidationError(f"{field_name} must be a {expected_type.__name__}")
 
-    normalized = value.strip()
+    return value
+
+
+def ensure_enum(value: object, enum_type: type[Enum], field_name: str) -> Enum:
+    if not isinstance(value, enum_type):
+        raise DomainValidationError(f"{field_name} must be a {enum_type.__name__}")
+
+    return value
+
+
+def normalize_required_text(value: str, field_name: str) -> str:
+    normalized = ensure_type(value, str, field_name).strip()
     if not normalized:
         raise DomainValidationError(f"{field_name} cannot be blank")
 
@@ -52,3 +63,4 @@ def ensure_positive_int(value: int, field_name: str) -> int:
         raise DomainValidationError(f"{field_name} must be positive")
 
     return value
+

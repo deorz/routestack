@@ -1,7 +1,8 @@
+from uuid import uuid4
+
 import pytest
 
 from domain.operations.operation import Operation, OperationStatus, OperationType
-from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError
 
 
@@ -9,7 +10,7 @@ from domain.shared.errors import DomainStateError
 def operation() -> Operation:
     return Operation(
         type=OperationType.RUN_HEALTH_CHECK,
-        node_id=EntityId.new(),
+        node_id=uuid4(),
         payload={"check": "health"},
         idempotency_key="op-123",
         max_attempts=2,

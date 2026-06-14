@@ -1,30 +1,34 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import StrEnum
+from enum import auto
 
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.shared.events import DomainEvent
-from domain.shared.time import ensure_utc, utc_now
-from domain.shared.validation import normalize_required_text
+from domain.shared.time import ensure_optional_utc, ensure_utc, utc_now
+from domain.shared.validation import (
+    ensure_enum,
+    ensure_non_negative_int,
+    ensure_positive_int,
+    normalize_required_text,
+)
+from domain.shared.value_enums import AutoNameStrEnum
 
 
-class SubscriptionStatus(StrEnum):
-    PENDING = "PENDING"
-    PROVISIONING = "PROVISIONING"
-    ACTIVE = "ACTIVE"
-    UPDATING = "UPDATING"
-    DEGRADED = "DEGRADED"
-    SUSPENDED = "SUSPENDED"
-    EXPIRED = "EXPIRED"
-    REVOKED = "REVOKED"
-    DELETED = "DELETED"
+class SubscriptionStatus(AutoNameStrEnum):
+    PENDING = auto()
+    PROVISIONING = auto()
+    ACTIVE = auto()
+    UPDATING = auto()
+    DEGRADED = auto()
+    SUSPENDED = auto()
+    EXPIRED = auto()
+    REVOKED = auto()
+    DELETED = auto()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class SubscriptionRevisionCreated(DomainEvent):
     subscription_id: EntityId
     revision: int
@@ -32,20 +36,15 @@ class SubscriptionRevisionCreated(DomainEvent):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        if not isinstance(self.subscription_id, EntityId):
-            raise DomainValidationError("subscription_id must be an EntityId")
-
-        if (
-            not isinstance(self.revision, int)
-            or isinstance(self.revision, bool)
-            or self.revision < 1
-        ):
-            raise DomainValidationError("revision must be a positive integer")
-
-        object.__setattr__(
-            self,
+        self.subscription_id = Entity._ensure_type(
+            self.subscription_id,
+            EntityId,
+            "subscription_id",
+        )
+        self.revision = ensure_positive_int(self.revision, "revision")
+        self.safe_change_summary = normalize_required_text(
+            self.safe_change_summary,
             "safe_change_summary",
-            normalize_required_text(self.safe_change_summary, "safe_change_summary"),
         )
 
 
@@ -76,19 +75,15 @@ class Subscription(Entity):
         if self.public_id == self.access_token_hash:
             raise DomainValidationError("public_id must differ from access_token_hash")
 
-        if not isinstance(self.client_id, EntityId):
-            raise DomainValidationError("client_id must be an EntityId")
-
-        if not isinstance(self.status, SubscriptionStatus):
-            raise DomainValidationError("status must be a SubscriptionStatus")
-
+        self.client_id = self._ensure_type(self.client_id, EntityId, "client_id")
+        self.status = ensure_enum(self.status, SubscriptionStatus, "status")
         self.revision = self._validate_revision(self.revision)
         self.created_at = ensure_utc(self.created_at, "created_at")
         self.updated_at = ensure_utc(self.updated_at, "updated_at")
-        self.expires_at = self._normalize_optional_timestamp(self.expires_at, "expires_at")
-        self.suspended_at = self._normalize_optional_timestamp(self.suspended_at, "suspended_at")
-        self.revoked_at = self._normalize_optional_timestamp(self.revoked_at, "revoked_at")
-        self.deleted_at = self._normalize_optional_timestamp(self.deleted_at, "deleted_at")
+        self.expires_at = ensure_optional_utc(self.expires_at, "expires_at")
+        self.suspended_at = ensure_optional_utc(self.suspended_at, "suspended_at")
+        self.revoked_at = ensure_optional_utc(self.revoked_at, "revoked_at")
+        self.deleted_at = ensure_optional_utc(self.deleted_at, "deleted_at")
 
     def bump_revision(self, summary: str) -> SubscriptionRevisionCreated:
         event = SubscriptionRevisionCreated(
@@ -136,12 +131,4 @@ class Subscription(Entity):
 
     @staticmethod
     def _validate_revision(value: int) -> int:
-        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
-            raise DomainValidationError("revision must be a non-negative integer")
-        return value
-
-    @staticmethod
-    def _normalize_optional_timestamp(value: datetime | None, field_name: str) -> datetime | None:
-        if value is None:
-            return None
-        return ensure_utc(value, field_name)
+        return ensure_non_negative_int(value, "revision")

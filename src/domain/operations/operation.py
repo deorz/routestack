@@ -1,42 +1,42 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import StrEnum
+from enum import auto
 from typing import Any
 
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError, DomainValidationError
-from domain.shared.time import ensure_utc, utc_now
+from domain.shared.time import ensure_optional_utc, ensure_utc, utc_now
 from domain.shared.validation import (
+    ensure_enum,
     ensure_non_negative_int,
     ensure_positive_int,
     normalize_optional_text,
     normalize_required_text,
 )
+from domain.shared.value_enums import AutoNameStrEnum
 
 
-class OperationType(StrEnum):
-    INSTALL_COMPONENT = "INSTALL_COMPONENT"
-    APPLY_SERVICE_REVISION = "APPLY_SERVICE_REVISION"
-    START_SERVICE = "START_SERVICE"
-    STOP_SERVICE = "STOP_SERVICE"
-    RESTART_SERVICE = "RESTART_SERVICE"
-    APPLY_FIREWALL_REVISION = "APPLY_FIREWALL_REVISION"
-    CREATE_TUNNEL = "CREATE_TUNNEL"
-    REMOVE_TUNNEL = "REMOVE_TUNNEL"
-    COLLECT_STATUS = "COLLECT_STATUS"
-    COLLECT_LOGS = "COLLECT_LOGS"
-    RUN_HEALTH_CHECK = "RUN_HEALTH_CHECK"
-    MANAGE_CERTIFICATE = "MANAGE_CERTIFICATE"
+class OperationType(AutoNameStrEnum):
+    INSTALL_COMPONENT = auto()
+    APPLY_SERVICE_REVISION = auto()
+    START_SERVICE = auto()
+    STOP_SERVICE = auto()
+    RESTART_SERVICE = auto()
+    APPLY_FIREWALL_REVISION = auto()
+    CREATE_TUNNEL = auto()
+    REMOVE_TUNNEL = auto()
+    COLLECT_STATUS = auto()
+    COLLECT_LOGS = auto()
+    RUN_HEALTH_CHECK = auto()
+    MANAGE_CERTIFICATE = auto()
 
 
-class OperationStatus(StrEnum):
-    PENDING = "PENDING"
-    CLAIMED = "CLAIMED"
-    SUCCEEDED = "SUCCEEDED"
-    FAILED = "FAILED"
+class OperationStatus(AutoNameStrEnum):
+    PENDING = auto()
+    CLAIMED = auto()
+    SUCCEEDED = auto()
+    FAILED = auto()
 
 
 @dataclass(slots=True, kw_only=True, eq=False)
@@ -56,13 +56,9 @@ class Operation(Entity):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        if not isinstance(self.type, OperationType):
-            raise DomainValidationError("type must be an OperationType")
-        if not isinstance(self.node_id, EntityId):
-            raise DomainValidationError("node_id must be an EntityId")
-        if not isinstance(self.status, OperationStatus):
-            raise DomainValidationError("status must be an OperationStatus")
-
+        self.type = ensure_enum(self.type, OperationType, "type")
+        self.node_id = self._ensure_type(self.node_id, EntityId, "node_id")
+        self.status = ensure_enum(self.status, OperationStatus, "status")
         self.payload = self._normalize_payload(self.payload)
         self.idempotency_key = normalize_required_text(self.idempotency_key, "idempotency_key")
         self.attempts = ensure_non_negative_int(self.attempts, "attempts")
@@ -71,8 +67,8 @@ class Operation(Entity):
         if self.attempts > self.max_attempts:
             raise DomainValidationError("attempts cannot exceed max_attempts")
 
-        self.started_at = self._normalize_optional_timestamp(self.started_at, "started_at")
-        self.finished_at = self._normalize_optional_timestamp(self.finished_at, "finished_at")
+        self.started_at = ensure_optional_utc(self.started_at, "started_at")
+        self.finished_at = ensure_optional_utc(self.finished_at, "finished_at")
         self.last_error = normalize_optional_text(self.last_error, "last_error")
         self.created_at = ensure_utc(self.created_at, "created_at")
         self.updated_at = ensure_utc(self.updated_at, "updated_at")
@@ -133,9 +129,3 @@ class Operation(Entity):
                 raise DomainValidationError("payload must be a mapping") from exc
 
         return dict(payload)
-
-    @staticmethod
-    def _normalize_optional_timestamp(value: datetime | None, field_name: str) -> datetime | None:
-        if value is None:
-            return None
-        return ensure_utc(value, field_name)

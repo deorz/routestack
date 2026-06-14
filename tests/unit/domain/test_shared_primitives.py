@@ -6,7 +6,7 @@ from domain.shared.events import DomainEvent
 from domain.shared.time import utc_now
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class DemoEvent(DomainEvent):
     message: str
 

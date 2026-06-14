@@ -1,6 +1,7 @@
+from uuid import uuid4
+
 import pytest
 
-from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.subscriptions.subscription import (
     Subscription,
@@ -12,7 +13,7 @@ from domain.subscriptions.subscription import (
 def test_subscription_rejects_shared_public_id_and_token_hash() -> None:
     with pytest.raises(DomainValidationError):
         Subscription(
-            client_id=EntityId.new(),
+            client_id=uuid4(),
             public_id="shared-value",
             access_token_hash="shared-value",
             name="Starter",
@@ -21,7 +22,7 @@ def test_subscription_rejects_shared_public_id_and_token_hash() -> None:
 
 def test_subscription_bump_revision_records_revision_event() -> None:
     subscription = Subscription(
-        client_id=EntityId.new(),
+        client_id=uuid4(),
         public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
         access_token_hash="hash-abc",
         name="Starter",
@@ -40,7 +41,7 @@ def test_subscription_bump_revision_records_revision_event() -> None:
 
 def test_subscription_suspend_resume_and_revoke_flow() -> None:
     subscription = Subscription(
-        client_id=EntityId.new(),
+        client_id=uuid4(),
         public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
         access_token_hash="hash-abc",
         name="Starter",
@@ -59,7 +60,7 @@ def test_subscription_suspend_resume_and_revoke_flow() -> None:
 
 def test_subscription_revoke_is_idempotent() -> None:
     subscription = Subscription(
-        client_id=EntityId.new(),
+        client_id=uuid4(),
         public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
         access_token_hash="hash-abc",
         name="Starter",
@@ -77,7 +78,7 @@ def test_subscription_revoke_is_idempotent() -> None:
 
 def test_subscription_rejects_resume_after_revocation() -> None:
     subscription = Subscription(
-        client_id=EntityId.new(),
+        client_id=uuid4(),
         public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
         access_token_hash="hash-abc",
         name="Starter",

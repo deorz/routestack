@@ -1,32 +1,39 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import StrEnum
+from enum import auto
 
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
-from domain.shared.errors import DomainStateError, DomainValidationError
+from domain.shared.errors import DomainStateError
 from domain.shared.time import ensure_utc, utc_now
-from domain.shared.validation import normalize_optional_text, normalize_required_text
+from domain.shared.validation import ensure_enum, normalize_optional_text, normalize_required_text
+from domain.shared.value_enums import AutoNameStrEnum
 
 
-class AccessGrantType(StrEnum):
-    VLESS_REALITY = "VLESS_REALITY"
-    AMNEZIAWG = "AMNEZIAWG"
-    HYSTERIA = "HYSTERIA"
-    TELEGRAM_PROXY = "TELEGRAM_PROXY"
-    SOCKS5 = "SOCKS5"
+class AccessGrantType(AutoNameStrEnum):
+    VLESS_REALITY = auto()
+    AMNEZIAWG = auto()
+    HYSTERIA = auto()
+    TELEGRAM_PROXY = auto()
+    SOCKS5 = auto()
 
 
-class AccessGrantStatus(StrEnum):
-    PENDING = "PENDING"
-    PROVISIONING = "PROVISIONING"
-    ACTIVE = "ACTIVE"
-    DISABLING = "DISABLING"
-    DISABLED = "DISABLED"
-    FAILED = "FAILED"
-    REVOKED = "REVOKED"
+class AccessGrantStatus(AutoNameStrEnum):
+    PENDING = auto()
+    PROVISIONING = auto()
+    ACTIVE = auto()
+    DISABLING = auto()
+    DISABLED = auto()
+    FAILED = auto()
+    REVOKED = auto()
+
+
+class AccessGrantState(AutoNameStrEnum):
+    PENDING = auto()
+    ENABLED = auto()
+    DISABLED = auto()
+    FAILED = auto()
+    REVOKED = auto()
 
 
 @dataclass(slots=True, kw_only=True, eq=False)
@@ -36,8 +43,8 @@ class AccessGrant(Entity):
     type: AccessGrantType
     display_name: str
     status: AccessGrantStatus = AccessGrantStatus.PENDING
-    desired_state: str = "enabled"
-    actual_state: str = "pending"
+    desired_state: AccessGrantState = AccessGrantState.ENABLED
+    actual_state: AccessGrantState = AccessGrantState.PENDING
     external_reference: str | None = None
     last_error: str | None = None
     created_at: datetime = field(default_factory=utc_now)
@@ -45,18 +52,25 @@ class AccessGrant(Entity):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        if not isinstance(self.subscription_id, EntityId):
-            raise DomainValidationError("subscription_id must be an EntityId")
-        if not isinstance(self.service_instance_id, EntityId):
-            raise DomainValidationError("service_instance_id must be an EntityId")
-        if not isinstance(self.type, AccessGrantType):
-            raise DomainValidationError("type must be an AccessGrantType")
-        if not isinstance(self.status, AccessGrantStatus):
-            raise DomainValidationError("status must be an AccessGrantStatus")
-
+        self.subscription_id = self._ensure_type(
+            self.subscription_id,
+            EntityId,
+            "subscription_id",
+        )
+        self.service_instance_id = self._ensure_type(
+            self.service_instance_id,
+            EntityId,
+            "service_instance_id",
+        )
+        self.type = ensure_enum(self.type, AccessGrantType, "type")
+        self.status = ensure_enum(self.status, AccessGrantStatus, "status")
         self.display_name = normalize_required_text(self.display_name, "display_name")
-        self.desired_state = normalize_required_text(self.desired_state, "desired_state")
-        self.actual_state = normalize_required_text(self.actual_state, "actual_state")
+        self.desired_state = ensure_enum(
+            self.desired_state,
+            AccessGrantState,
+            "desired_state",
+        )
+        self.actual_state = ensure_enum(self.actual_state, AccessGrantState, "actual_state")
         self.external_reference = normalize_optional_text(
             self.external_reference,
             "external_reference",
@@ -68,22 +82,22 @@ class AccessGrant(Entity):
     def succeed(self) -> None:
         self._ensure_mutable("succeed")
         self.status = AccessGrantStatus.ACTIVE
-        self.desired_state = "enabled"
-        self.actual_state = "enabled"
+        self.desired_state = AccessGrantState.ENABLED
+        self.actual_state = AccessGrantState.ENABLED
         self.last_error = None
         self.updated_at = utc_now()
 
     def disable(self) -> None:
         self._ensure_not_terminal("disable")
         self.status = AccessGrantStatus.DISABLED
-        self.desired_state = "disabled"
-        self.actual_state = "disabled"
+        self.desired_state = AccessGrantState.DISABLED
+        self.actual_state = AccessGrantState.DISABLED
         self.updated_at = utc_now()
 
     def fail(self, error_message: str | None = None) -> None:
         self._ensure_not_terminal("fail")
         self.status = AccessGrantStatus.FAILED
-        self.actual_state = "failed"
+        self.actual_state = AccessGrantState.FAILED
         self.last_error = normalize_optional_text(error_message, "error_message")
         self.updated_at = utc_now()
 
@@ -92,8 +106,8 @@ class AccessGrant(Entity):
             return
 
         self.status = AccessGrantStatus.REVOKED
-        self.desired_state = "disabled"
-        self.actual_state = "revoked"
+        self.desired_state = AccessGrantState.DISABLED
+        self.actual_state = AccessGrantState.REVOKED
         self.updated_at = utc_now()
 
     def _ensure_mutable(self, action: str) -> None:

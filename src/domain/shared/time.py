@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from typing import Protocol
 
@@ -29,3 +27,10 @@ def ensure_utc(moment: datetime, field_name: str) -> datetime:
         raise DomainValidationError(f"{field_name} must be timezone-aware")
 
     return moment.astimezone(UTC)
+
+
+def ensure_optional_utc(moment: datetime | None, field_name: str) -> datetime | None:
+    if moment is None:
+        return None
+
+    return ensure_utc(moment, field_name)
