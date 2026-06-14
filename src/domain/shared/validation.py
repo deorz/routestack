@@ -1,18 +1,17 @@
 from collections.abc import Iterable
 from enum import Enum
-from typing import Any
 
 from domain.shared.errors import DomainValidationError
 
 
-def ensure_type(value: object, expected_type: type[Any], field_name: str) -> Any:
+def ensure_type[T](value: object, expected_type: type[T], field_name: str) -> T:
     if not isinstance(value, expected_type):
         raise DomainValidationError(f"{field_name} must be a {expected_type.__name__}")
 
     return value
 
 
-def ensure_enum(value: object, enum_type: type[Enum], field_name: str) -> Enum:
+def ensure_enum[EnumT: Enum](value: object, enum_type: type[EnumT], field_name: str) -> EnumT:
     if not isinstance(value, enum_type):
         raise DomainValidationError(f"{field_name} must be a {enum_type.__name__}")
 
@@ -63,4 +62,3 @@ def ensure_positive_int(value: int, field_name: str) -> int:
         raise DomainValidationError(f"{field_name} must be positive")
 
     return value
-

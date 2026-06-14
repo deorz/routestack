@@ -3,10 +3,14 @@ from datetime import datetime
 from enum import auto
 
 from domain.shared.entity import Entity
-from domain.shared.entity_id import EntityId
+from domain.shared.entity_id import EntityId, ensure_entity_id
 from domain.shared.errors import DomainStateError
 from domain.shared.time import ensure_utc, utc_now
-from domain.shared.validation import ensure_enum, normalize_optional_text, normalize_required_text
+from domain.shared.validation import (
+    ensure_enum,
+    normalize_optional_text,
+    normalize_required_text,
+)
 from domain.shared.value_enums import AutoNameStrEnum
 
 
@@ -52,14 +56,12 @@ class AccessGrant(Entity):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.subscription_id = self._ensure_type(
+        self.subscription_id = ensure_entity_id(
             self.subscription_id,
-            EntityId,
             "subscription_id",
         )
-        self.service_instance_id = self._ensure_type(
+        self.service_instance_id = ensure_entity_id(
             self.service_instance_id,
-            EntityId,
             "service_instance_id",
         )
         self.type = ensure_enum(self.type, AccessGrantType, "type")

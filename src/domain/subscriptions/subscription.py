@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import auto
 
 from domain.shared.entity import Entity
-from domain.shared.entity_id import EntityId
+from domain.shared.entity_id import EntityId, ensure_entity_id
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.shared.events import DomainEvent
 from domain.shared.time import ensure_optional_utc, ensure_utc, utc_now
@@ -36,9 +36,8 @@ class SubscriptionRevisionCreated(DomainEvent):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.subscription_id = Entity._ensure_type(
+        self.subscription_id = ensure_entity_id(
             self.subscription_id,
-            EntityId,
             "subscription_id",
         )
         self.revision = ensure_positive_int(self.revision, "revision")
@@ -75,7 +74,7 @@ class Subscription(Entity):
         if self.public_id == self.access_token_hash:
             raise DomainValidationError("public_id must differ from access_token_hash")
 
-        self.client_id = self._ensure_type(self.client_id, EntityId, "client_id")
+        self.client_id = ensure_entity_id(self.client_id, "client_id")
         self.status = ensure_enum(self.status, SubscriptionStatus, "status")
         self.revision = self._validate_revision(self.revision)
         self.created_at = ensure_utc(self.created_at, "created_at")

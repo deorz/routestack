@@ -4,7 +4,7 @@ from enum import auto
 from typing import Any
 
 from domain.shared.entity import Entity
-from domain.shared.entity_id import EntityId
+from domain.shared.entity_id import EntityId, ensure_entity_id
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.shared.time import ensure_optional_utc, ensure_utc, utc_now
 from domain.shared.validation import (
@@ -57,7 +57,7 @@ class Operation(Entity):
     def __post_init__(self) -> None:
         super().__post_init__()
         self.type = ensure_enum(self.type, OperationType, "type")
-        self.node_id = self._ensure_type(self.node_id, EntityId, "node_id")
+        self.node_id = ensure_entity_id(self.node_id, "node_id")
         self.status = ensure_enum(self.status, OperationStatus, "status")
         self.payload = self._normalize_payload(self.payload)
         self.idempotency_key = normalize_required_text(self.idempotency_key, "idempotency_key")
