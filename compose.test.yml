@@ -1,0 +1,28 @@
+services:
+  routestack-test:
+    build:
+      context: .
+      target: test
+    environment:
+      ROUTESTACK_ENVIRONMENT: test
+      ROUTESTACK_DATABASE_URL: sqlite:////tmp/routestack-test.db
+      ROUTESTACK_SECRET_KEY: test-secret-key
+    command: ["uv", "run", "--group", "dev", "pytest"]
+
+  routestack-test-integration:
+    build:
+      context: .
+      target: test
+    profiles:
+      - integration
+    depends_on:
+      routestack-postgres:
+        condition: service_healthy
+      routestack-redis:
+        condition: service_healthy
+    environment:
+      ROUTESTACK_ENVIRONMENT: test
+      ROUTESTACK_DATABASE_URL: postgresql+psycopg://routestack:routestack@routestack-postgres:5432/routestack
+      ROUTESTACK_REDIS_URL: redis://routestack-redis:6379/0
+      ROUTESTACK_SECRET_KEY: test-secret-key
+    command: ["uv", "run", "--group", "dev", "pytest"]

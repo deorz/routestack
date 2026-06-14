@@ -1,0 +1,49 @@
+name: routestack
+
+services:
+  routestack-app:
+    build:
+      context: .
+      target: runtime
+    environment:
+      ROUTESTACK_ENVIRONMENT: local
+      ROUTESTACK_DATABASE_URL: sqlite:////data/routestack.db
+      ROUTESTACK_SECRET_KEY: change-me-in-production
+    ports:
+      - "8000:8000"
+    volumes:
+      - routestack-data:/data
+
+  routestack-postgres:
+    image: postgres:17-alpine
+    profiles:
+      - integration
+    environment:
+      POSTGRES_DB: routestack
+      POSTGRES_USER: routestack
+      POSTGRES_PASSWORD: routestack
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U routestack -d routestack"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "5432:5432"
+    volumes:
+      - routestack-postgres-data:/var/lib/postgresql/data
+
+  routestack-redis:
+    image: redis:7-alpine
+    profiles:
+      - integration
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "6379:6379"
+
+volumes:
+  routestack-data:
+  routestack-postgres-data:
