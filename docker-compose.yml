@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    environment:
+      ROUTESTACK_ENVIRONMENT: local
+      ROUTESTACK_DATABASE_URL: sqlite:////data/routestack.db
+      ROUTESTACK_SECRET_KEY: change-me-in-production
+    ports:
+      - "8000:8000"
+    volumes:
+      - app-data:/data
+
+volumes:
+  app-data:

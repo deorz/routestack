@@ -1,0 +1,10 @@
+services:
+  test:
+    build:
+      context: .
+      target: test
+    environment:
+      ROUTESTACK_ENVIRONMENT: test
+      ROUTESTACK_DATABASE_URL: sqlite:////tmp/routestack-test.db
+      ROUTESTACK_SECRET_KEY: test-secret-key
+    command: ["uv", "run", "--group", "dev", "pytest"]
