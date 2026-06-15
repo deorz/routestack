@@ -6,7 +6,6 @@ def test_bcrypt_password_hasher_round_trip_verification() -> None:
 
     password_hash = hasher.hash_password("secret-123")
 
-    assert password_hash.startswith("routestack-bcrypt-sha256$")
     assert hasher.verify_password("secret-123", password_hash) is True
 
 

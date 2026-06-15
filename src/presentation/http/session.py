@@ -5,8 +5,6 @@ from uuid import UUID
 
 from domain.shared.entity_id import EntityId
 
-ADMIN_SESSION_COOKIE_NAME = "routestack_admin_session"
-
 
 def sign_admin_session(admin_user_id: EntityId, secret_key: str, ttl_seconds: int) -> str:
     expires_at = int(time.time()) + ttl_seconds

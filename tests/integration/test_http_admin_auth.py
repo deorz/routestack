@@ -1,5 +1,5 @@
 from application.admins.auth import bootstrap_admin_user
-from application.settings import DEFAULT_ADMIN_SESSION_TTL_SECONDS, AppSettings
+from application.settings import AppSettings
 from infrastructure.db import Base
 
 
@@ -8,15 +8,14 @@ def _database_url(tmp_path, name: str) -> str:
 
 
 def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_client_factory, tmp_path) -> None:
-    client = app_client_factory(
-        AppSettings(
-            app_name="InjectedStack",
-            database_url=_database_url(tmp_path, "admin-auth-flow.db"),
-            environment="test",
-            secret_key="integration-secret",
-            admin_session_ttl_seconds=DEFAULT_ADMIN_SESSION_TTL_SECONDS,
-        )
+    settings = AppSettings(
+        app_name="InjectedStack",
+        database_url=_database_url(tmp_path, "admin-auth-flow.db"),
+        environment="test",
+        secret_key="integration-secret",
+        admin_session_ttl_seconds=AppSettings.DEFAULT_ADMIN_SESSION_TTL_SECONDS,
     )
+    client = app_client_factory(settings)
     container = client.app.state.container
     engine = container.db_engine()
     Base.metadata.create_all(engine)
@@ -42,8 +41,8 @@ def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_clien
 
     assert response.status_code == 303
     assert response.headers["location"] == "/admin"
-    assert "routestack_admin_session" in response.headers.get("set-cookie", "")
-    assert f"max-age={DEFAULT_ADMIN_SESSION_TTL_SECONDS}" in response.headers.get("set-cookie", "").lower()
+    assert settings.admin_session_cookie_name in response.headers.get("set-cookie", "")
+    assert f"max-age={settings.admin_session_ttl_seconds}" in response.headers.get("set-cookie", "").lower()
 
     protected = client.get("/admin")
     assert protected.status_code == 200
@@ -52,7 +51,7 @@ def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_clien
     logout = client.post("/admin/logout", follow_redirects=False)
     assert logout.status_code == 303
     assert logout.headers["location"] == "/admin/login"
-    assert "routestack_admin_session" in logout.headers.get("set-cookie", "")
+    assert settings.admin_session_cookie_name in logout.headers.get("set-cookie", "")
     assert "Max-Age=0" in logout.headers.get("set-cookie", "")
 
     after_logout = client.get("/admin")
