@@ -41,8 +41,8 @@ def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_clien
 
     assert response.status_code == 303
     assert response.headers["location"] == "/admin"
-    assert settings.admin_session_cookie_name in response.headers.get("set-cookie", "")
-    assert f"max-age={settings.admin_session_ttl_seconds}" in response.headers.get("set-cookie", "").lower()
+    assert settings.admin_session.cookie_name in response.headers.get("set-cookie", "")
+    assert f"max-age={settings.admin_session.ttl_seconds}" in response.headers.get("set-cookie", "").lower()
 
     protected = client.get("/admin")
     assert protected.status_code == 200
@@ -51,7 +51,7 @@ def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_clien
     logout = client.post("/admin/logout", follow_redirects=False)
     assert logout.status_code == 303
     assert logout.headers["location"] == "/admin/login"
-    assert settings.admin_session_cookie_name in logout.headers.get("set-cookie", "")
+    assert settings.admin_session.cookie_name in logout.headers.get("set-cookie", "")
     assert "Max-Age=0" in logout.headers.get("set-cookie", "")
 
     after_logout = client.get("/admin")

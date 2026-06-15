@@ -1,6 +1,7 @@
-from dataclasses import dataclass, field
 from datetime import datetime
 from enum import auto
+
+from pydantic import Field, field_validator, model_validator
 
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId, ensure_entity_id
@@ -28,20 +29,27 @@ class SubscriptionStatus(AutoNameStrEnum):
     DELETED = auto()
 
 
-@dataclass(slots=True)
 class SubscriptionRevisionCreated(DomainEvent):
     subscription_id: EntityId
     revision: int
     safe_change_summary: str
 
-    def __post_init__(self) -> None:
-        DomainEvent.__post_init__(self)
-        self.subscription_id = ensure_entity_id(self.subscription_id, "subscription_id")
-        self.revision = ensure_positive_int(self.revision, "revision")
-        self.safe_change_summary = normalize_required_text(self.safe_change_summary, "safe_change_summary")
+    @field_validator("subscription_id", mode="before")
+    @classmethod
+    def validate_subscription_id(cls, value: object) -> EntityId:
+        return ensure_entity_id(value, "subscription_id")
+
+    @field_validator("revision", mode="before")
+    @classmethod
+    def validate_revision(cls, value: int) -> int:
+        return ensure_positive_int(value, "revision")
+
+    @field_validator("safe_change_summary", mode="before")
+    @classmethod
+    def validate_safe_change_summary(cls, value: str) -> str:
+        return normalize_required_text(value, "safe_change_summary")
 
 
-@dataclass(slots=True, kw_only=True, eq=False)
 class Subscription(Entity):
     public_id: str
     access_token_hash: str
@@ -53,27 +61,44 @@ class Subscription(Entity):
     suspended_at: datetime | None = None
     revoked_at: datetime | None = None
     deleted_at: datetime | None = None
-    created_at: datetime = field(default_factory=utc_now)
-    updated_at: datetime = field(default_factory=utc_now)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
-    def __post_init__(self) -> None:
-        Entity.__post_init__(self)
-        self.public_id = normalize_required_text(self.public_id, "public_id")
-        self.access_token_hash = normalize_required_text(self.access_token_hash, "access_token_hash")
-        self.name = normalize_required_text(self.name, "name")
+    @field_validator("public_id", "access_token_hash", "name", mode="before")
+    @classmethod
+    def validate_required_text(cls, value: str, info) -> str:
+        return normalize_required_text(value, info.field_name)
 
+    @field_validator("client_id", mode="before")
+    @classmethod
+    def validate_client_id(cls, value: object) -> EntityId:
+        return ensure_entity_id(value, "client_id")
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def validate_status(cls, value: object) -> SubscriptionStatus:
+        return ensure_enum(value, SubscriptionStatus, "status")
+
+    @field_validator("revision", mode="before")
+    @classmethod
+    def validate_non_negative_revision(cls, value: int) -> int:
+        return ensure_non_negative_int(value, "revision")
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_timestamp(cls, value: datetime, info) -> datetime:
+        return ensure_utc(value, info.field_name)
+
+    @field_validator("expires_at", "suspended_at", "revoked_at", "deleted_at", mode="before")
+    @classmethod
+    def validate_optional_timestamp(cls, value: datetime | None, info) -> datetime | None:
+        return ensure_optional_utc(value, info.field_name)
+
+    @model_validator(mode="after")
+    def validate_public_token_split(self) -> "Subscription":
         if self.public_id == self.access_token_hash:
             raise DomainValidationError("public_id must differ from access_token_hash")
-
-        self.client_id = ensure_entity_id(self.client_id, "client_id")
-        self.status = ensure_enum(self.status, SubscriptionStatus, "status")
-        self.revision = self._validate_revision(self.revision)
-        self.created_at = ensure_utc(self.created_at, "created_at")
-        self.updated_at = ensure_utc(self.updated_at, "updated_at")
-        self.expires_at = ensure_optional_utc(self.expires_at, "expires_at")
-        self.suspended_at = ensure_optional_utc(self.suspended_at, "suspended_at")
-        self.revoked_at = ensure_optional_utc(self.revoked_at, "revoked_at")
-        self.deleted_at = ensure_optional_utc(self.deleted_at, "deleted_at")
+        return self
 
     def bump_revision(self, summary: str) -> SubscriptionRevisionCreated:
         event = SubscriptionRevisionCreated(
@@ -118,7 +143,3 @@ class Subscription(Entity):
 
         if self.status == SubscriptionStatus.SUSPENDED:
             raise DomainStateError("subscription is already suspended")
-
-    @staticmethod
-    def _validate_revision(value: int) -> int:
-        return ensure_non_negative_int(value, "revision")

@@ -20,14 +20,14 @@ def test_settings_have_secure_local_defaults(monkeypatch) -> None:
 
     settings = AppSettings()
 
-    assert settings.app_name == "RouteStack"
-    assert settings.environment == "local"
-    assert settings.database_url == "sqlite:///./routestack.db"
-    assert settings.secret_key == AppSettings.DEFAULT_SECRET_KEY
-    assert settings.admin_session_ttl_seconds == AppSettings.DEFAULT_ADMIN_SESSION_TTL_SECONDS
-    assert settings.admin_session_cookie_name == "routestack_admin_session"
-    assert settings.server_host == "0.0.0.0"
-    assert settings.server_port == 8000
+    assert settings.app.name == "RouteStack"
+    assert settings.app.environment == "local"
+    assert settings.database.url == "sqlite:///./routestack.db"
+    assert settings.security.secret_key == AppSettings.DEFAULT_SECRET_KEY
+    assert settings.admin_session.ttl_seconds == AppSettings.DEFAULT_ADMIN_SESSION_TTL_SECONDS
+    assert settings.admin_session.cookie_name == "routestack_admin_session"
+    assert settings.server.host == "0.0.0.0"
+    assert settings.server.port == 8000
 
 
 @pytest.mark.parametrize(
@@ -55,7 +55,7 @@ def test_settings_allow_default_secret_in_local_and_test(monkeypatch, environmen
 
     settings = AppSettings(environment=environment)
 
-    assert settings.secret_key == AppSettings.DEFAULT_SECRET_KEY
+    assert settings.security.secret_key == AppSettings.DEFAULT_SECRET_KEY
 
 
 @pytest.mark.parametrize("environment", ["production", "staging"])
@@ -80,4 +80,4 @@ def test_settings_accept_strong_secret_in_non_local_test_environments(monkeypatc
 
     settings = AppSettings(environment=environment, secret_key="super-strong-secret-key-0123456789abcdef")
 
-    assert settings.secret_key == "super-strong-secret-key-0123456789abcdef"
+    assert settings.security.secret_key == "super-strong-secret-key-0123456789abcdef"

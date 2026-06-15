@@ -1,7 +1,8 @@
-from dataclasses import dataclass, field
 from datetime import datetime
 from enum import auto
 from typing import Any
+
+from pydantic import Field, field_validator, model_validator
 
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId, ensure_entity_id
@@ -39,7 +40,6 @@ class OperationStatus(AutoNameStrEnum):
     FAILED = auto()
 
 
-@dataclass(slots=True, kw_only=True, eq=False)
 class Operation(Entity):
     type: OperationType
     node_id: EntityId
@@ -51,27 +51,64 @@ class Operation(Entity):
     started_at: datetime | None = None
     finished_at: datetime | None = None
     last_error: str | None = None
-    created_at: datetime = field(default_factory=utc_now)
-    updated_at: datetime = field(default_factory=utc_now)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
-    def __post_init__(self) -> None:
-        Entity.__post_init__(self)
-        self.type = ensure_enum(self.type, OperationType, "type")
-        self.node_id = ensure_entity_id(self.node_id, "node_id")
-        self.status = ensure_enum(self.status, OperationStatus, "status")
-        self.payload = self._normalize_payload(self.payload)
-        self.idempotency_key = normalize_required_text(self.idempotency_key, "idempotency_key")
-        self.attempts = ensure_non_negative_int(self.attempts, "attempts")
-        self.max_attempts = ensure_positive_int(self.max_attempts, "max_attempts")
+    @field_validator("type", mode="before")
+    @classmethod
+    def validate_type(cls, value: object) -> OperationType:
+        return ensure_enum(value, OperationType, "type")
 
+    @field_validator("node_id", mode="before")
+    @classmethod
+    def validate_node_id(cls, value: object) -> EntityId:
+        return ensure_entity_id(value, "node_id")
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def validate_status(cls, value: object) -> OperationStatus:
+        return ensure_enum(value, OperationStatus, "status")
+
+    @field_validator("payload", mode="before")
+    @classmethod
+    def validate_payload(cls, value: dict[str, Any]) -> dict[str, Any]:
+        return cls._normalize_payload(value)
+
+    @field_validator("idempotency_key", mode="before")
+    @classmethod
+    def validate_idempotency_key(cls, value: str) -> str:
+        return normalize_required_text(value, "idempotency_key")
+
+    @field_validator("attempts", mode="before")
+    @classmethod
+    def validate_attempts(cls, value: int) -> int:
+        return ensure_non_negative_int(value, "attempts")
+
+    @field_validator("max_attempts", mode="before")
+    @classmethod
+    def validate_max_attempts(cls, value: int) -> int:
+        return ensure_positive_int(value, "max_attempts")
+
+    @field_validator("started_at", "finished_at", mode="before")
+    @classmethod
+    def validate_optional_timestamp(cls, value: datetime | None, info) -> datetime | None:
+        return ensure_optional_utc(value, info.field_name)
+
+    @field_validator("last_error", mode="before")
+    @classmethod
+    def validate_last_error(cls, value: str | None) -> str | None:
+        return normalize_optional_text(value, "last_error")
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_timestamp(cls, value: datetime, info) -> datetime:
+        return ensure_utc(value, info.field_name)
+
+    @model_validator(mode="after")
+    def validate_attempt_limit(self) -> "Operation":
         if self.attempts > self.max_attempts:
             raise DomainValidationError("attempts cannot exceed max_attempts")
-
-        self.started_at = ensure_optional_utc(self.started_at, "started_at")
-        self.finished_at = ensure_optional_utc(self.finished_at, "finished_at")
-        self.last_error = normalize_optional_text(self.last_error, "last_error")
-        self.created_at = ensure_utc(self.created_at, "created_at")
-        self.updated_at = ensure_utc(self.updated_at, "updated_at")
+        return self
 
     def claim(self) -> None:
         if self.status != OperationStatus.PENDING:

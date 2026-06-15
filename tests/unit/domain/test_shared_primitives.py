@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta, timezone
 
 from domain.shared.entity import Entity
@@ -6,7 +5,6 @@ from domain.shared.events import DomainEvent
 from domain.shared.time import utc_now
 
 
-@dataclass(slots=True)
 class DemoEvent(DomainEvent):
     message: str
 

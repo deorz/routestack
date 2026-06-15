@@ -1,9 +1,9 @@
 from datetime import UTC, datetime
 
 import pytest
+from pydantic import ValidationError
 
 from domain.admins.admin_user import AdminUser
-from domain.shared.errors import DomainValidationError
 
 
 def test_admin_user_trims_login_whitespace() -> None:
@@ -13,17 +13,17 @@ def test_admin_user_trims_login_whitespace() -> None:
 
 
 def test_admin_user_rejects_blank_login() -> None:
-    with pytest.raises(DomainValidationError):
+    with pytest.raises(ValidationError):
         AdminUser(login="   ", password_hash="hash-123")
 
 
 def test_admin_user_rejects_blank_password_hash() -> None:
-    with pytest.raises(DomainValidationError):
+    with pytest.raises(ValidationError):
         AdminUser(login="root", password_hash="   ")
 
 
 def test_admin_user_rejects_naive_created_at() -> None:
-    with pytest.raises(DomainValidationError):
+    with pytest.raises(ValidationError):
         AdminUser(
             login="root",
             password_hash="hash-123",

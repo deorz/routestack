@@ -15,10 +15,10 @@ def test_container_provides_settings_from_environment(monkeypatch) -> None:
     settings = container.settings()
 
     assert isinstance(settings, AppSettings)
-    assert settings.app_name == "RouteStack Test"
-    assert settings.environment == "test"
-    assert settings.database_url == "sqlite:///./test.db"
-    assert settings.secret_key == "test-secret"
+    assert settings.app.name == "RouteStack Test"
+    assert settings.app.environment == "test"
+    assert settings.database.url == "sqlite:///./test.db"
+    assert settings.security.secret_key == "test-secret"
 
 
 def test_container_allows_provider_overrides() -> None:
@@ -29,7 +29,7 @@ def test_container_allows_provider_overrides() -> None:
         settings = container.settings()
 
     assert hasattr(container, "settings")
-    assert settings.app_name == "OverrideStack"
+    assert settings.app.name == "OverrideStack"
 
 
 def test_container_wires_database_unit_of_work(tmp_path) -> None:

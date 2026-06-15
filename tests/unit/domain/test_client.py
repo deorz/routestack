@@ -1,11 +1,11 @@
 import pytest
+from pydantic import ValidationError
 
 from domain.clients.client import Client
-from domain.shared.errors import DomainValidationError
 
 
 def test_client_rejects_blank_display_name() -> None:
-    with pytest.raises(DomainValidationError):
+    with pytest.raises(ValidationError):
         Client(display_name="   ")
 
 

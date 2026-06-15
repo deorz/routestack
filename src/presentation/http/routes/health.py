@@ -14,4 +14,4 @@ router = APIRouter()
 def healthcheck(
     settings: Annotated[AppSettings, Depends(Provide[Container.settings])],
 ) -> dict[str, str]:
-    return {"status": "ok", "service": settings.app_name}
+    return {"status": "ok", "service": settings.app.name}

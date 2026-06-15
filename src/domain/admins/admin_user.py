@@ -1,23 +1,35 @@
-from dataclasses import dataclass, field
 from datetime import datetime
+
+from pydantic import Field, field_validator
 
 from domain.shared.entity import Entity
 from domain.shared.time import ensure_optional_utc, ensure_utc, utc_now
 from domain.shared.validation import normalize_required_text
 
 
-@dataclass(slots=True, kw_only=True, eq=False)
 class AdminUser(Entity):
     login: str
     password_hash: str
     last_login_at: datetime | None = None
     disabled_at: datetime | None = None
-    created_at: datetime = field(default_factory=utc_now)
+    created_at: datetime = Field(default_factory=utc_now)
 
-    def __post_init__(self) -> None:
-        Entity.__post_init__(self)
-        self.login = normalize_required_text(self.login, "login")
-        self.password_hash = normalize_required_text(self.password_hash, "password_hash")
-        self.created_at = ensure_utc(self.created_at, "created_at")
-        self.last_login_at = ensure_optional_utc(self.last_login_at, "last_login_at")
-        self.disabled_at = ensure_optional_utc(self.disabled_at, "disabled_at")
+    @field_validator("login", mode="before")
+    @classmethod
+    def validate_login(cls, value: str) -> str:
+        return normalize_required_text(value, "login")
+
+    @field_validator("password_hash", mode="before")
+    @classmethod
+    def validate_password_hash(cls, value: str) -> str:
+        return normalize_required_text(value, "password_hash")
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def validate_created_at(cls, value: datetime) -> datetime:
+        return ensure_utc(value, "created_at")
+
+    @field_validator("last_login_at", "disabled_at", mode="before")
+    @classmethod
+    def validate_optional_timestamp(cls, value: datetime | None, info) -> datetime | None:
+        return ensure_optional_utc(value, info.field_name)

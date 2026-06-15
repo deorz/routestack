@@ -1,5 +1,6 @@
-from dataclasses import dataclass, field
 from datetime import datetime
+
+from pydantic import Field, field_validator
 
 from domain.shared.entity import Entity
 from domain.shared.errors import DomainStateError, DomainValidationError
@@ -11,29 +12,47 @@ from domain.shared.validation import (
 )
 
 
-@dataclass(slots=True, kw_only=True, eq=False)
 class Client(Entity):
     display_name: str
     email: str | None = None
     comment: str | None = None
-    tags: tuple[str, ...] = field(default_factory=tuple)
+    tags: tuple[str, ...] = Field(default_factory=tuple)
     enabled: bool = True
     deleted_at: datetime | None = None
-    created_at: datetime = field(default_factory=utc_now)
-    updated_at: datetime = field(default_factory=utc_now)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
-    def __post_init__(self) -> None:
-        Entity.__post_init__(self)
-        self.display_name = normalize_required_text(self.display_name, "display_name")
-        self.email = normalize_optional_text(self.email, "email")
-        self.comment = normalize_optional_text(self.comment, "comment")
-        self.tags = normalize_tags(self.tags)
-        self.deleted_at = ensure_optional_utc(self.deleted_at, "deleted_at")
-        self.created_at = ensure_utc(self.created_at, "created_at")
-        self.updated_at = ensure_utc(self.updated_at, "updated_at")
+    @field_validator("display_name", mode="before")
+    @classmethod
+    def validate_display_name(cls, value: str) -> str:
+        return normalize_required_text(value, "display_name")
 
-        if not isinstance(self.enabled, bool):
+    @field_validator("email", "comment", mode="before")
+    @classmethod
+    def validate_optional_text(cls, value: str | None, info) -> str | None:
+        return normalize_optional_text(value, info.field_name)
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def validate_tags(cls, value: object) -> tuple[str, ...]:
+        return normalize_tags(value)
+
+    @field_validator("enabled", mode="before")
+    @classmethod
+    def validate_enabled(cls, value: object) -> bool:
+        if not isinstance(value, bool):
             raise DomainValidationError("enabled must be a boolean")
+        return value
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_timestamp(cls, value: datetime, info) -> datetime:
+        return ensure_utc(value, info.field_name)
+
+    @field_validator("deleted_at", mode="before")
+    @classmethod
+    def validate_deleted_at(cls, value: datetime | None) -> datetime | None:
+        return ensure_optional_utc(value, "deleted_at")
 
     def rename(self, display_name: str) -> None:
         self._ensure_mutable("rename")
