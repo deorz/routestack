@@ -1,6 +1,7 @@
 from dependency_injector import containers, providers
 
 from application.settings import AppSettings
+from infrastructure.db import SqlAlchemyUnitOfWork, create_session_factory, create_sqlite_engine
 
 
 class Container(containers.DeclarativeContainer):
@@ -11,6 +12,18 @@ class Container(containers.DeclarativeContainer):
     )
 
     settings = providers.Singleton(AppSettings)
+    db_engine = providers.Singleton(
+        create_sqlite_engine,
+        url=settings.provided.database_url,
+    )
+    session_factory = providers.Singleton(
+        create_session_factory,
+        engine=db_engine,
+    )
+    unit_of_work = providers.Factory(
+        SqlAlchemyUnitOfWork,
+        session_factory=session_factory,
+    )
 
 
 def create_container() -> Container:

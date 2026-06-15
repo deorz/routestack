@@ -3,7 +3,7 @@ name = "deorz-vpn-panel"
 version = "0.1.0"
 description = "Web panel to manage VPN protocols"
 readme = "README.md"
-requires-python = ">=3.13,<3.15"
+requires-python = "==3.13.*"
 dependencies = [
     "alembic>=1.14.0",
     "dependency-injector>=4.48.0",

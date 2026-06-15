@@ -55,7 +55,7 @@ class Operation(Entity):
     updated_at: datetime = field(default_factory=utc_now)
 
     def __post_init__(self) -> None:
-        super().__post_init__()
+        Entity.__post_init__(self)
         self.type = ensure_enum(self.type, OperationType, "type")
         self.node_id = ensure_entity_id(self.node_id, "node_id")
         self.status = ensure_enum(self.status, OperationStatus, "status")
@@ -101,11 +101,8 @@ class Operation(Entity):
         now = utc_now()
         self.last_error = normalize_optional_text(error_message, "error_message")
         self.finished_at = now
-        self.status = (
-            OperationStatus.FAILED
-            if self.attempts >= self.max_attempts
-            else OperationStatus.PENDING
-        )
+        attempts_exhausted = self.attempts >= self.max_attempts
+        self.status = OperationStatus.FAILED if attempts_exhausted else OperationStatus.PENDING
         self.updated_at = now
 
     def fail_terminal(self, error_message: str | None = None) -> None:

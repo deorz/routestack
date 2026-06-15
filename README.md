@@ -4,8 +4,8 @@ Self-hosted web panel for configuring and managing VPN and proxy protocols.
 
 ## Runtime
 
-The project targets Python `>=3.13,<3.15`. Development can use Python 3.14
-free-threaded builds, but production code must stay compatible with Python 3.13.
+The project targets Python `3.13`. Development, CI, and production should use
+the same minor version to keep runtime behavior and code style predictable.
 
 ## Dependencies
 

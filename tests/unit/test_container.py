@@ -1,5 +1,7 @@
 from application.settings import AppSettings
+from domain.clients.client import Client
 from infrastructure.container import create_container
+from infrastructure.db import Base
 
 
 def test_container_provides_settings_from_environment(monkeypatch) -> None:
@@ -28,3 +30,24 @@ def test_container_allows_provider_overrides() -> None:
 
     assert hasattr(container, "settings")
     assert settings.app_name == "OverrideStack"
+
+
+def test_container_wires_database_unit_of_work(tmp_path) -> None:
+    container = create_container()
+    settings = AppSettings(database_url=f"sqlite:///{tmp_path / 'container.db'}")
+
+    with container.settings.override(settings):
+        engine = container.db_engine()
+        Base.metadata.create_all(engine)
+
+        client = Client(display_name="Container Client")
+
+        with container.unit_of_work() as unit_of_work:
+            unit_of_work.clients.add(client)
+            unit_of_work.commit()
+
+        with container.unit_of_work() as unit_of_work:
+            loaded = unit_of_work.clients.get(client.id)
+
+    assert loaded is not None
+    assert loaded.display_name == "Container Client"

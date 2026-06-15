@@ -55,7 +55,7 @@ class AccessGrant(Entity):
     updated_at: datetime = field(default_factory=utc_now)
 
     def __post_init__(self) -> None:
-        super().__post_init__()
+        Entity.__post_init__(self)
         self.subscription_id = ensure_entity_id(self.subscription_id, "subscription_id")
         self.service_instance_id = ensure_entity_id(self.service_instance_id, "service_instance_id")
         self.type = ensure_enum(self.type, AccessGrantType, "type")

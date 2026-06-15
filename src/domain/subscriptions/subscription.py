@@ -35,7 +35,7 @@ class SubscriptionRevisionCreated(DomainEvent):
     safe_change_summary: str
 
     def __post_init__(self) -> None:
-        super().__post_init__()
+        DomainEvent.__post_init__(self)
         self.subscription_id = ensure_entity_id(self.subscription_id, "subscription_id")
         self.revision = ensure_positive_int(self.revision, "revision")
         self.safe_change_summary = normalize_required_text(self.safe_change_summary, "safe_change_summary")
@@ -57,7 +57,7 @@ class Subscription(Entity):
     updated_at: datetime = field(default_factory=utc_now)
 
     def __post_init__(self) -> None:
-        super().__post_init__()
+        Entity.__post_init__(self)
         self.public_id = normalize_required_text(self.public_id, "public_id")
         self.access_token_hash = normalize_required_text(self.access_token_hash, "access_token_hash")
         self.name = normalize_required_text(self.name, "name")
