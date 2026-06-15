@@ -19,6 +19,7 @@ def test_alembic_upgrade_head_creates_persistence_tables(tmp_path: Path) -> None
     engine.dispose()
 
     assert {
+        "admin_users",
         "access_grants",
         "alembic_version",
         "clients",

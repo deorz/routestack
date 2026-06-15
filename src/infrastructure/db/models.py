@@ -22,6 +22,17 @@ class ClientRow(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class AdminUserRow(Base):
+    __tablename__ = "admin_users"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    login: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    disabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class SubscriptionRow(Base):
     __tablename__ = "subscriptions"
 

@@ -1,6 +1,7 @@
 from typing import Protocol, runtime_checkable
 
 from domain.access_grants.access_grant import AccessGrant
+from domain.admins.admin_user import AdminUser
 from domain.clients.client import Client
 from domain.operations.operation import Operation
 from domain.shared.entity_id import EntityId
@@ -12,6 +13,15 @@ class ClientRepository(Protocol):
     def add(self, client: Client) -> None: ...
 
     def get(self, client_id: EntityId) -> Client | None: ...
+
+
+@runtime_checkable
+class AdminUserRepository(Protocol):
+    def add(self, admin_user: AdminUser) -> None: ...
+
+    def get(self, admin_user_id: EntityId) -> AdminUser | None: ...
+
+    def get_by_login(self, login: str) -> AdminUser | None: ...
 
 
 @runtime_checkable

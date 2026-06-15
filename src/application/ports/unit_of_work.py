@@ -3,6 +3,7 @@ from typing import Protocol, Self, runtime_checkable
 
 from application.ports.repositories import (
     AccessGrantRepository,
+    AdminUserRepository,
     ClientRepository,
     OperationRepository,
     SubscriptionRepository,
@@ -11,6 +12,7 @@ from application.ports.repositories import (
 
 @runtime_checkable
 class UnitOfWork(Protocol):
+    admins: AdminUserRepository
     clients: ClientRepository
     subscriptions: SubscriptionRepository
     access_grants: AccessGrantRepository
