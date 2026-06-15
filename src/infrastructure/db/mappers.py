@@ -7,11 +7,34 @@ from domain.access_grants.access_grant import (
     AccessGrantStatus,
     AccessGrantType,
 )
+from domain.admins.admin_user import AdminUser
 from domain.clients.client import Client
 from domain.operations.operation import Operation, OperationStatus, OperationType
 from domain.shared.entity_id import EntityId
 from domain.subscriptions.subscription import Subscription, SubscriptionStatus
-from infrastructure.db.models import AccessGrantRow, ClientRow, OperationRow, SubscriptionRow
+from infrastructure.db.models import AccessGrantRow, AdminUserRow, ClientRow, OperationRow, SubscriptionRow
+
+
+def admin_user_to_row(admin_user: AdminUser) -> AdminUserRow:
+    return AdminUserRow(
+        id=str(admin_user.id),
+        login=admin_user.login,
+        password_hash=admin_user.password_hash,
+        last_login_at=admin_user.last_login_at,
+        disabled_at=admin_user.disabled_at,
+        created_at=admin_user.created_at,
+    )
+
+
+def admin_user_from_row(row: AdminUserRow) -> AdminUser:
+    return AdminUser(
+        id=_entity_id(row.id),
+        login=row.login,
+        password_hash=row.password_hash,
+        last_login_at=_utc_or_none(row.last_login_at),
+        disabled_at=_utc_or_none(row.disabled_at),
+        created_at=_utc(row.created_at),
+    )
 
 
 def client_to_row(client: Client) -> ClientRow:

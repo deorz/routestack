@@ -1,15 +1,20 @@
 from collections.abc import Callable
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from domain.access_grants.access_grant import AccessGrant
+from domain.admins.admin_user import AdminUser
 from domain.clients.client import Client
 from domain.operations.operation import Operation
 from domain.shared.entity_id import EntityId
+from domain.shared.validation import normalize_required_text
 from domain.subscriptions.subscription import Subscription
 from infrastructure.db.mappers import (
     access_grant_from_row,
     access_grant_to_row,
+    admin_user_from_row,
+    admin_user_to_row,
     client_from_row,
     client_to_row,
     operation_from_row,
@@ -17,7 +22,7 @@ from infrastructure.db.mappers import (
     subscription_from_row,
     subscription_to_row,
 )
-from infrastructure.db.models import AccessGrantRow, ClientRow, OperationRow, SubscriptionRow
+from infrastructure.db.models import AccessGrantRow, AdminUserRow, ClientRow, OperationRow, SubscriptionRow
 
 
 class SqlAlchemyRepository[DomainEntity, Row]:
@@ -47,6 +52,19 @@ class SqlAlchemyRepository[DomainEntity, Row]:
 class SqlAlchemyClientRepository(SqlAlchemyRepository[Client, ClientRow]):
     def __init__(self, session: Session) -> None:
         super().__init__(session, ClientRow, client_to_row, client_from_row)
+
+
+class SqlAlchemyAdminUserRepository(SqlAlchemyRepository[AdminUser, AdminUserRow]):
+    def __init__(self, session: Session) -> None:
+        super().__init__(session, AdminUserRow, admin_user_to_row, admin_user_from_row)
+
+    def get_by_login(self, login: str) -> AdminUser | None:
+        normalized_login = normalize_required_text(login, "login")
+        row = self._session.scalar(select(self._row_type).where(self._row_type.login == normalized_login))
+        if row is None:
+            return None
+
+        return self._from_row(row)
 
 
 class SqlAlchemySubscriptionRepository(SqlAlchemyRepository[Subscription, SubscriptionRow]):

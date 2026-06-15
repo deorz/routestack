@@ -2,6 +2,8 @@ from infrastructure.db.base import Base
 from infrastructure.db.mappers import (
     access_grant_from_row,
     access_grant_to_row,
+    admin_user_from_row,
+    admin_user_to_row,
     client_from_row,
     client_to_row,
     operation_from_row,
@@ -9,9 +11,10 @@ from infrastructure.db.mappers import (
     subscription_from_row,
     subscription_to_row,
 )
-from infrastructure.db.models import AccessGrantRow, ClientRow, OperationRow, SubscriptionRow
+from infrastructure.db.models import AccessGrantRow, AdminUserRow, ClientRow, OperationRow, SubscriptionRow
 from infrastructure.db.repositories import (
     SqlAlchemyAccessGrantRepository,
+    SqlAlchemyAdminUserRepository,
     SqlAlchemyClientRepository,
     SqlAlchemyOperationRepository,
     SqlAlchemyRepository,
@@ -25,16 +28,20 @@ from infrastructure.db.sqlite import (
 from infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 
 __all__ = [
+    "AdminUserRow",
     "AccessGrantRow",
     "Base",
     "ClientRow",
     "OperationRow",
     "SQLITE_BUSY_TIMEOUT_MS",
+    "SqlAlchemyAdminUserRepository",
     "SqlAlchemyAccessGrantRepository",
     "SqlAlchemyClientRepository",
     "SqlAlchemyOperationRepository",
     "SqlAlchemyRepository",
     "SqlAlchemySubscriptionRepository",
+    "admin_user_from_row",
+    "admin_user_to_row",
     "SqlAlchemyUnitOfWork",
     "SubscriptionRow",
     "access_grant_from_row",

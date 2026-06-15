@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from infrastructure.db.repositories import (
     SqlAlchemyAccessGrantRepository,
+    SqlAlchemyAdminUserRepository,
     SqlAlchemyClientRepository,
     SqlAlchemyOperationRepository,
     SqlAlchemySubscriptionRepository,
@@ -17,6 +18,7 @@ class SqlAlchemyUnitOfWork:
 
     def __enter__(self) -> Self:
         self.session = self._session_factory()
+        self.admins = SqlAlchemyAdminUserRepository(self.session)
         self.clients = SqlAlchemyClientRepository(self.session)
         self.subscriptions = SqlAlchemySubscriptionRepository(self.session)
         self.access_grants = SqlAlchemyAccessGrantRepository(self.session)
