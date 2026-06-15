@@ -1,5 +1,5 @@
 from application.admins.auth import bootstrap_admin_user
-from application.settings import AppSettings
+from application.settings import DEFAULT_ADMIN_SESSION_TTL_SECONDS, AppSettings
 from infrastructure.db import Base
 
 
@@ -14,6 +14,7 @@ def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_clien
             database_url=_database_url(tmp_path, "admin-auth-flow.db"),
             environment="test",
             secret_key="integration-secret",
+            admin_session_ttl_seconds=DEFAULT_ADMIN_SESSION_TTL_SECONDS,
         )
     )
     container = client.app.state.container
@@ -42,6 +43,7 @@ def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_clien
     assert response.status_code == 303
     assert response.headers["location"] == "/admin"
     assert "routestack_admin_session" in response.headers.get("set-cookie", "")
+    assert f"max-age={DEFAULT_ADMIN_SESSION_TTL_SECONDS}" in response.headers.get("set-cookie", "").lower()
 
     protected = client.get("/admin")
     assert protected.status_code == 200

@@ -112,11 +112,12 @@ def _render_login_page(error_message: str | None = None) -> str:
 def _set_admin_session_cookie(response: RedirectResponse, admin_user: AdminUser, settings: AppSettings) -> None:
     response.set_cookie(
         key=ADMIN_SESSION_COOKIE_NAME,
-        value=sign_admin_session(admin_user.id, settings.secret_key),
+        value=sign_admin_session(admin_user.id, settings.secret_key, settings.admin_session_ttl_seconds),
         httponly=True,
         secure=_cookie_is_secure(settings.environment),
         samesite="lax",
         path="/",
+        max_age=settings.admin_session_ttl_seconds,
     )
 
 
