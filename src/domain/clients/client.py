@@ -23,7 +23,7 @@ class Client(Entity):
     updated_at: datetime = field(default_factory=utc_now)
 
     def __post_init__(self) -> None:
-        super().__post_init__()
+        Entity.__post_init__(self)
         self.display_name = normalize_required_text(self.display_name, "display_name")
         self.email = normalize_optional_text(self.email, "email")
         self.comment = normalize_optional_text(self.comment, "comment")

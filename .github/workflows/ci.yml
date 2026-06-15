@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Formatting, lint, and tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          enable-cache: true
+
+      - name: Check formatting
+        run: uv run --python 3.13 --group dev ruff format --check .
+
+      - name: Run lint
+        run: uv run --python 3.13 --group dev ruff check .
+
+      - name: Run tests
+        run: uv run --python 3.13 --group dev pytest -q
