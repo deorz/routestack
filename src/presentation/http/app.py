@@ -8,7 +8,7 @@ from presentation.http.routes.health import router as health_router
 def create_app(container: Container | None = None) -> FastAPI:
     app_container = container or create_container()
     app_settings = app_container.settings()
-    app = FastAPI(title=app_settings.app.name)
+    app = FastAPI(title=app_settings.APP.NAME)
     app.state.container = app_container
     app.include_router(auth_router)
     app.include_router(health_router)

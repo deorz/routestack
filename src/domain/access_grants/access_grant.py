@@ -1,18 +1,17 @@
-from datetime import datetime
 from enum import auto
+from typing import Annotated
 
-from pydantic import Field, field_validator
+from pydantic import AwareDatetime, Field, StringConstraints
 
 from domain.shared.entity import Entity
-from domain.shared.entity_id import EntityId, ensure_entity_id
+from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError
-from domain.shared.time import ensure_utc, utc_now
-from domain.shared.validation import (
-    ensure_enum,
-    normalize_optional_text,
-    normalize_required_text,
-)
+from domain.shared.time import utc_now
+from domain.shared.validation import normalize_optional_text
 from domain.shared.value_enums import AutoNameStrEnum
+
+RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+OptionalText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] | None
 
 
 class AccessGrantType(AutoNameStrEnum):
@@ -45,49 +44,14 @@ class AccessGrant(Entity):
     subscription_id: EntityId
     service_instance_id: EntityId
     type: AccessGrantType
-    display_name: str
+    display_name: RequiredText
     status: AccessGrantStatus = AccessGrantStatus.PENDING
     desired_state: AccessGrantState = AccessGrantState.ENABLED
     actual_state: AccessGrantState = AccessGrantState.PENDING
-    external_reference: str | None = None
-    last_error: str | None = None
-    created_at: datetime = Field(default_factory=utc_now)
-    updated_at: datetime = Field(default_factory=utc_now)
-
-    @field_validator("subscription_id", "service_instance_id", mode="before")
-    @classmethod
-    def validate_entity_reference(cls, value: object, info) -> EntityId:
-        return ensure_entity_id(value, info.field_name)
-
-    @field_validator("type", mode="before")
-    @classmethod
-    def validate_type(cls, value: object) -> AccessGrantType:
-        return ensure_enum(value, AccessGrantType, "type")
-
-    @field_validator("status", mode="before")
-    @classmethod
-    def validate_status(cls, value: object) -> AccessGrantStatus:
-        return ensure_enum(value, AccessGrantStatus, "status")
-
-    @field_validator("desired_state", "actual_state", mode="before")
-    @classmethod
-    def validate_state(cls, value: object, info) -> AccessGrantState:
-        return ensure_enum(value, AccessGrantState, info.field_name)
-
-    @field_validator("display_name", mode="before")
-    @classmethod
-    def validate_display_name(cls, value: str) -> str:
-        return normalize_required_text(value, "display_name")
-
-    @field_validator("external_reference", "last_error", mode="before")
-    @classmethod
-    def validate_optional_text(cls, value: str | None, info) -> str | None:
-        return normalize_optional_text(value, info.field_name)
-
-    @field_validator("created_at", "updated_at", mode="before")
-    @classmethod
-    def validate_timestamp(cls, value: datetime, info) -> datetime:
-        return ensure_utc(value, info.field_name)
+    external_reference: OptionalText = None
+    last_error: OptionalText = None
+    created_at: AwareDatetime = Field(default_factory=utc_now)
+    updated_at: AwareDatetime = Field(default_factory=utc_now)
 
     def succeed(self) -> None:
         self._ensure_mutable("succeed")

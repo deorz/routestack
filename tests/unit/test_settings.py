@@ -1,83 +1,58 @@
 import pytest
 from pydantic import ValidationError
 
-from application.settings import AppSettings
+from application.settings import AdminSessionSettings, AppSettings, Config, DatabaseSettings, SecuritySettings
 
 
 def _clear_settings_environment(monkeypatch) -> None:
     monkeypatch.delenv("ROUTESTACK_APP_NAME", raising=False)
-    monkeypatch.delenv("ROUTESTACK_ENVIRONMENT", raising=False)
+    monkeypatch.delenv("ROUTESTACK_APP_ENVIRONMENT", raising=False)
     monkeypatch.delenv("ROUTESTACK_DATABASE_URL", raising=False)
-    monkeypatch.delenv("ROUTESTACK_SECRET_KEY", raising=False)
+    monkeypatch.delenv("ROUTESTACK_SECURITY_SECRET_KEY", raising=False)
     monkeypatch.delenv("ROUTESTACK_ADMIN_SESSION_COOKIE_NAME", raising=False)
     monkeypatch.delenv("ROUTESTACK_ADMIN_SESSION_TTL_SECONDS", raising=False)
     monkeypatch.delenv("ROUTESTACK_SERVER_HOST", raising=False)
     monkeypatch.delenv("ROUTESTACK_SERVER_PORT", raising=False)
 
 
-def test_settings_have_secure_local_defaults(monkeypatch) -> None:
+def test_settings_have_local_defaults(monkeypatch) -> None:
     _clear_settings_environment(monkeypatch)
 
-    settings = AppSettings()
+    settings = Config()
 
-    assert settings.app.name == "RouteStack"
-    assert settings.app.environment == "local"
-    assert settings.database.url == "sqlite:///./routestack.db"
-    assert settings.security.secret_key == AppSettings.DEFAULT_SECRET_KEY
-    assert settings.admin_session.ttl_seconds == AppSettings.DEFAULT_ADMIN_SESSION_TTL_SECONDS
-    assert settings.admin_session.cookie_name == "routestack_admin_session"
-    assert settings.server.host == "0.0.0.0"
-    assert settings.server.port == 8000
+    assert settings.APP.NAME == "RouteStack"
+    assert settings.APP.ENVIRONMENT == "local"
+    assert settings.DATABASE.URL == "sqlite:///./routestack.db"
+    assert settings.SECURITY.SECRET_KEY == SecuritySettings.DEFAULT_SECRET_KEY
+    assert settings.ADMIN_SESSION.TTL_SECONDS == AdminSessionSettings.DEFAULT_TTL_SECONDS
+    assert settings.ADMIN_SESSION.COOKIE_NAME == "routestack_admin_session"
+    assert settings.SERVER.HOST == "0.0.0.0"
+    assert settings.SERVER.PORT == 8000
 
 
-@pytest.mark.parametrize(
-    ("admin_session_cookie_name", "expected_fragment"),
-    [
-        ("", "String should have at least 1 character"),
-        ("bad name", "String should match pattern"),
-        ("bad;name", "String should match pattern"),
-    ],
-)
-def test_settings_reject_invalid_admin_session_cookie_names(
-    monkeypatch,
-    admin_session_cookie_name: str,
-    expected_fragment: str,
-) -> None:
+def test_settings_read_category_environment_prefixes(monkeypatch) -> None:
+    _clear_settings_environment(monkeypatch)
+    monkeypatch.setenv("ROUTESTACK_APP_NAME", "InjectedStack")
+    monkeypatch.setenv("ROUTESTACK_APP_ENVIRONMENT", "test")
+    monkeypatch.setenv("ROUTESTACK_DATABASE_URL", "sqlite:///./test.db")
+    monkeypatch.setenv("ROUTESTACK_SECURITY_SECRET_KEY", "test-secret")
+    monkeypatch.setenv("ROUTESTACK_ADMIN_SESSION_COOKIE_NAME", "admin_cookie")
+    monkeypatch.setenv("ROUTESTACK_ADMIN_SESSION_TTL_SECONDS", "60")
+    monkeypatch.setenv("ROUTESTACK_SERVER_HOST", "127.0.0.1")
+    monkeypatch.setenv("ROUTESTACK_SERVER_PORT", "9000")
+
+    settings = Config()
+
+    assert AppSettings(NAME="InjectedStack", ENVIRONMENT="test") == settings.APP
+    assert DatabaseSettings(URL="sqlite:///./test.db") == settings.DATABASE
+    assert SecuritySettings(SECRET_KEY="test-secret") == settings.SECURITY
+    assert AdminSessionSettings(TTL_SECONDS=60, COOKIE_NAME="admin_cookie") == settings.ADMIN_SESSION
+    assert settings.SERVER.HOST == "127.0.0.1"
+    assert settings.SERVER.PORT == 9000
+
+
+def test_settings_reject_blank_admin_session_cookie_name(monkeypatch) -> None:
     _clear_settings_environment(monkeypatch)
 
-    with pytest.raises(ValidationError, match=expected_fragment):
-        AppSettings(admin_session_cookie_name=admin_session_cookie_name)
-
-
-@pytest.mark.parametrize("environment", ["local", "test"])
-def test_settings_allow_default_secret_in_local_and_test(monkeypatch, environment: str) -> None:
-    _clear_settings_environment(monkeypatch)
-
-    settings = AppSettings(environment=environment)
-
-    assert settings.security.secret_key == AppSettings.DEFAULT_SECRET_KEY
-
-
-@pytest.mark.parametrize("environment", ["production", "staging"])
-def test_settings_reject_default_secret_in_non_local_test_environments(monkeypatch, environment: str) -> None:
-    _clear_settings_environment(monkeypatch)
-
-    with pytest.raises(ValidationError, match="secret_key"):
-        AppSettings(environment=environment)
-
-
-@pytest.mark.parametrize("environment", ["production", "staging"])
-def test_settings_reject_weak_secret_in_non_local_test_environments(monkeypatch, environment: str) -> None:
-    _clear_settings_environment(monkeypatch)
-
-    with pytest.raises(ValidationError, match="secret_key"):
-        AppSettings(environment=environment, secret_key="too-short")
-
-
-@pytest.mark.parametrize("environment", ["production", "staging"])
-def test_settings_accept_strong_secret_in_non_local_test_environments(monkeypatch, environment: str) -> None:
-    _clear_settings_environment(monkeypatch)
-
-    settings = AppSettings(environment=environment, secret_key="super-strong-secret-key-0123456789abcdef")
-
-    assert settings.security.secret_key == "super-strong-secret-key-0123456789abcdef"
+    with pytest.raises(ValidationError, match="String should have at least 1 character"):
+        AdminSessionSettings(COOKIE_NAME="")

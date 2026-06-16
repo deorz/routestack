@@ -1,20 +1,16 @@
-from datetime import datetime
 from enum import auto
+from typing import Annotated
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import AwareDatetime, Field, NonNegativeInt, PositiveInt, StringConstraints, model_validator
 
 from domain.shared.entity import Entity
-from domain.shared.entity_id import EntityId, ensure_entity_id
+from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.shared.events import DomainEvent
-from domain.shared.time import ensure_optional_utc, ensure_utc, utc_now
-from domain.shared.validation import (
-    ensure_enum,
-    ensure_non_negative_int,
-    ensure_positive_int,
-    normalize_required_text,
-)
+from domain.shared.time import utc_now
 from domain.shared.value_enums import AutoNameStrEnum
+
+RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
 class SubscriptionStatus(AutoNameStrEnum):
@@ -31,68 +27,23 @@ class SubscriptionStatus(AutoNameStrEnum):
 
 class SubscriptionRevisionCreated(DomainEvent):
     subscription_id: EntityId
-    revision: int
-    safe_change_summary: str
-
-    @field_validator("subscription_id", mode="before")
-    @classmethod
-    def validate_subscription_id(cls, value: object) -> EntityId:
-        return ensure_entity_id(value, "subscription_id")
-
-    @field_validator("revision", mode="before")
-    @classmethod
-    def validate_revision(cls, value: int) -> int:
-        return ensure_positive_int(value, "revision")
-
-    @field_validator("safe_change_summary", mode="before")
-    @classmethod
-    def validate_safe_change_summary(cls, value: str) -> str:
-        return normalize_required_text(value, "safe_change_summary")
+    revision: PositiveInt
+    safe_change_summary: RequiredText
 
 
 class Subscription(Entity):
-    public_id: str
-    access_token_hash: str
+    public_id: RequiredText
+    access_token_hash: RequiredText
     client_id: EntityId
-    name: str
+    name: RequiredText
     status: SubscriptionStatus = SubscriptionStatus.PENDING
-    revision: int = 0
-    expires_at: datetime | None = None
-    suspended_at: datetime | None = None
-    revoked_at: datetime | None = None
-    deleted_at: datetime | None = None
-    created_at: datetime = Field(default_factory=utc_now)
-    updated_at: datetime = Field(default_factory=utc_now)
-
-    @field_validator("public_id", "access_token_hash", "name", mode="before")
-    @classmethod
-    def validate_required_text(cls, value: str, info) -> str:
-        return normalize_required_text(value, info.field_name)
-
-    @field_validator("client_id", mode="before")
-    @classmethod
-    def validate_client_id(cls, value: object) -> EntityId:
-        return ensure_entity_id(value, "client_id")
-
-    @field_validator("status", mode="before")
-    @classmethod
-    def validate_status(cls, value: object) -> SubscriptionStatus:
-        return ensure_enum(value, SubscriptionStatus, "status")
-
-    @field_validator("revision", mode="before")
-    @classmethod
-    def validate_non_negative_revision(cls, value: int) -> int:
-        return ensure_non_negative_int(value, "revision")
-
-    @field_validator("created_at", "updated_at", mode="before")
-    @classmethod
-    def validate_timestamp(cls, value: datetime, info) -> datetime:
-        return ensure_utc(value, info.field_name)
-
-    @field_validator("expires_at", "suspended_at", "revoked_at", "deleted_at", mode="before")
-    @classmethod
-    def validate_optional_timestamp(cls, value: datetime | None, info) -> datetime | None:
-        return ensure_optional_utc(value, info.field_name)
+    revision: NonNegativeInt = 0
+    expires_at: AwareDatetime | None = None
+    suspended_at: AwareDatetime | None = None
+    revoked_at: AwareDatetime | None = None
+    deleted_at: AwareDatetime | None = None
+    created_at: AwareDatetime = Field(default_factory=utc_now)
+    updated_at: AwareDatetime = Field(default_factory=utc_now)
 
     @model_validator(mode="after")
     def validate_public_token_split(self) -> "Subscription":

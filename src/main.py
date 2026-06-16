@@ -1,7 +1,7 @@
 import uvicorn
 from pydantic import BaseModel
 
-from application.settings import AppSettings
+from application.settings import Config
 from infrastructure.container import create_container
 
 
@@ -12,10 +12,10 @@ class UvicornConfig(BaseModel):
     port: int
 
     @classmethod
-    def from_settings(cls, settings: AppSettings) -> "UvicornConfig":
+    def from_settings(cls, settings: Config) -> "UvicornConfig":
         return cls(
-            host=settings.server.host,
-            port=settings.server.port,
+            host=settings.SERVER.HOST,
+            port=settings.SERVER.PORT,
         )
 
 
