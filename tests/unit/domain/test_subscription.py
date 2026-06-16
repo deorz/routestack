@@ -1,17 +1,18 @@
 from uuid import uuid4
 
 import pytest
+from pydantic import ValidationError
 
-from domain.shared.errors import DomainStateError, DomainValidationError
+from domain.shared.errors import DomainStateError
+from domain.subscriptions.enums import SubscriptionStatus
 from domain.subscriptions.subscription import (
     Subscription,
     SubscriptionRevisionCreated,
-    SubscriptionStatus,
 )
 
 
 def test_subscription_rejects_shared_public_id_and_token_hash() -> None:
-    with pytest.raises(DomainValidationError):
+    with pytest.raises(ValidationError):
         Subscription(
             client_id=uuid4(),
             public_id="shared-value",

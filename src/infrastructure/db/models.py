@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from infrastructure.db.base import Base
 
 
-class ClientRow(Base):
+class ClientOrm(Base):
     __tablename__ = "clients"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
@@ -22,7 +22,7 @@ class ClientRow(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
-class AdminUserRow(Base):
+class AdminUserOrm(Base):
     __tablename__ = "admin_users"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
@@ -33,7 +33,7 @@ class AdminUserRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
-class SubscriptionRow(Base):
+class SubscriptionOrm(Base):
     __tablename__ = "subscriptions"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
@@ -51,7 +51,7 @@ class SubscriptionRow(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
-class AccessGrantRow(Base):
+class AccessGrantOrm(Base):
     __tablename__ = "access_grants"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
@@ -68,7 +68,7 @@ class AccessGrantRow(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
-class OperationRow(Base):
+class OperationOrm(Base):
     __tablename__ = "operations"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)

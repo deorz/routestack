@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from application.admins.auth import authenticate_admin_user
 from application.ports.security import PasswordHasher
 from application.ports.unit_of_work import UnitOfWork
-from application.settings import AppSettings
+from application.settings import Config
 from domain.admins.admin_user import AdminUser
 from infrastructure.container import Container
 from presentation.http.cookies import clear_admin_session_cookie, set_admin_session_cookie
@@ -27,13 +27,13 @@ def admin_login_page() -> HTMLResponse:
 def admin_login(
     login: Annotated[str, Form(...)],
     password: Annotated[str, Form(...)],
-    settings: Annotated[AppSettings, Depends(Provide[Container.settings])],
+    settings: Annotated[Config, Depends(Provide[Container.settings])],
     password_hasher: Annotated[PasswordHasher, Depends(Provide[Container.password_hasher])],
-    unit_of_work: Annotated[UnitOfWork, Depends(Provide[Container.unit_of_work])],
+    uow: Annotated[UnitOfWork, Depends(Provide[Container.unit_of_work])],
 ) -> HTMLResponse | RedirectResponse:
-    with unit_of_work as transaction:
+    with uow:
         admin_user = authenticate_admin_user(
-            transaction,
+            uow,
             password_hasher,
             login=login,
             password=password,
@@ -43,7 +43,7 @@ def admin_login(
                 render_admin_login_page("Invalid credentials"), status_code=status.HTTP_401_UNAUTHORIZED
             )
 
-        transaction.commit()
+        uow.commit()
 
     response = RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
     set_admin_session_cookie(response, admin_user, settings)
@@ -53,7 +53,7 @@ def admin_login(
 @router.post("/admin/logout", include_in_schema=False, response_model=None)
 @inject
 def admin_logout(
-    settings: Annotated[AppSettings, Depends(Provide[Container.settings])],
+    settings: Annotated[Config, Depends(Provide[Container.settings])],
 ) -> RedirectResponse:
     response = RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
     clear_admin_session_cookie(response, settings)

@@ -1,4 +1,4 @@
-from application.settings import AppSettings
+from application.settings import AppSettings, Config
 
 
 def test_healthcheck_returns_service_status(app_client_factory) -> None:
@@ -11,7 +11,7 @@ def test_healthcheck_returns_service_status(app_client_factory) -> None:
 
 
 def test_healthcheck_uses_settings_from_container(app_client_factory) -> None:
-    client = app_client_factory(AppSettings(app_name="InjectedStack"))
+    client = app_client_factory(Config(APP=AppSettings(NAME="InjectedStack")))
 
     response = client.get("/healthz")
 

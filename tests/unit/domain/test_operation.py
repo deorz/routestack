@@ -2,7 +2,8 @@ from uuid import uuid4
 
 import pytest
 
-from domain.operations.operation import Operation, OperationStatus, OperationType
+from domain.operations.enums import OperationStatus, OperationType
+from domain.operations.operation import Operation
 from domain.shared.errors import DomainStateError
 
 

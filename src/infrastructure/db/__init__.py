@@ -1,17 +1,5 @@
 from infrastructure.db.base import Base
-from infrastructure.db.mappers import (
-    access_grant_from_row,
-    access_grant_to_row,
-    admin_user_from_row,
-    admin_user_to_row,
-    client_from_row,
-    client_to_row,
-    operation_from_row,
-    operation_to_row,
-    subscription_from_row,
-    subscription_to_row,
-)
-from infrastructure.db.models import AccessGrantRow, AdminUserRow, ClientRow, OperationRow, SubscriptionRow
+from infrastructure.db.models import AccessGrantOrm, AdminUserOrm, ClientOrm, OperationOrm, SubscriptionOrm
 from infrastructure.db.repositories import (
     SqlAlchemyAccessGrantRepository,
     SqlAlchemyAdminUserRepository,
@@ -28,11 +16,11 @@ from infrastructure.db.sqlite import (
 from infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 
 __all__ = [
-    "AdminUserRow",
-    "AccessGrantRow",
+    "AdminUserOrm",
+    "AccessGrantOrm",
     "Base",
-    "ClientRow",
-    "OperationRow",
+    "ClientOrm",
+    "OperationOrm",
     "SQLITE_BUSY_TIMEOUT_MS",
     "SqlAlchemyAdminUserRepository",
     "SqlAlchemyAccessGrantRepository",
@@ -40,18 +28,8 @@ __all__ = [
     "SqlAlchemyOperationRepository",
     "SqlAlchemyRepository",
     "SqlAlchemySubscriptionRepository",
-    "admin_user_from_row",
-    "admin_user_to_row",
     "SqlAlchemyUnitOfWork",
-    "SubscriptionRow",
-    "access_grant_from_row",
-    "access_grant_to_row",
-    "client_from_row",
-    "client_to_row",
+    "SubscriptionOrm",
     "create_session_factory",
     "create_sqlite_engine",
-    "operation_from_row",
-    "operation_to_row",
-    "subscription_from_row",
-    "subscription_to_row",
 ]

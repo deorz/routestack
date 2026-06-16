@@ -1,15 +1,11 @@
-from dataclasses import dataclass, field
-from datetime import datetime
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from domain.shared.entity_id import EntityId, ensure_entity_id, new_entity_id
-from domain.shared.time import ensure_utc, utc_now
+from domain.shared.entity_id import EntityId, new_entity_id
+from domain.shared.time import utc_now
 
 
-@dataclass(slots=True, kw_only=True)
-class DomainEvent:
-    event_id: EntityId = field(default_factory=new_entity_id)
-    occurred_at: datetime = field(default_factory=utc_now)
+class DomainEvent(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True, validate_assignment=True)
 
-    def __post_init__(self) -> None:
-        self.event_id = ensure_entity_id(self.event_id, "event_id")
-        self.occurred_at = ensure_utc(self.occurred_at, "occurred_at")
+    event_id: EntityId = Field(default_factory=new_entity_id)
+    occurred_at: AwareDatetime = Field(default_factory=utc_now)

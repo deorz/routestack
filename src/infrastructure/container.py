@@ -1,6 +1,6 @@
 from dependency_injector import containers, providers
 
-from application.settings import AppSettings
+from application.settings import Config
 from infrastructure.db import SqlAlchemyUnitOfWork, create_session_factory, create_sqlite_engine
 from infrastructure.security.password_hasher import BcryptPasswordHasher
 
@@ -15,11 +15,11 @@ class Container(containers.DeclarativeContainer):
         ],
     )
 
-    settings = providers.Singleton(AppSettings)
+    settings = providers.Singleton(Config)
     password_hasher = providers.Singleton(BcryptPasswordHasher)
     db_engine = providers.Singleton(
         create_sqlite_engine,
-        url=settings.provided.database_url,
+        url=settings.provided.DATABASE.URL,
     )
     session_factory = providers.Singleton(
         create_session_factory,

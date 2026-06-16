@@ -4,9 +4,9 @@ services:
       context: .
       target: runtime
     environment:
-      ROUTESTACK_ENVIRONMENT: local
+      ROUTESTACK_APP_ENVIRONMENT: local
       ROUTESTACK_DATABASE_URL: sqlite:////data/routestack.db
-      ROUTESTACK_SECRET_KEY: change-me-in-production
+      ROUTESTACK_SECURITY_SECRET_KEY: change-me-in-production
     ports:
       - "8000:8000"
     volumes:

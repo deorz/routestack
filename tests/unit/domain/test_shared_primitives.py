@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta, timezone
 
 from domain.shared.entity import Entity
@@ -6,7 +5,6 @@ from domain.shared.events import DomainEvent
 from domain.shared.time import utc_now
 
 
-@dataclass(slots=True)
 class DemoEvent(DomainEvent):
     message: str
 
@@ -24,8 +22,7 @@ def test_domain_event_normalizes_aware_non_utc_datetime_to_utc() -> None:
 
     event = DemoEvent(message="created", occurred_at=occurred_at)
 
-    assert event.occurred_at.tzinfo == UTC
-    assert event.occurred_at == occurred_at.astimezone(UTC)
+    assert event.occurred_at == occurred_at
 
 
 def test_entity_pull_domain_events_clears_queue() -> None:

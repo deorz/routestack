@@ -1,4 +1,3 @@
-from dataclasses import asdict
 from pathlib import Path
 
 import pytest
@@ -22,7 +21,7 @@ def test_unit_of_work_commits_client_to_new_transaction(tmp_path: Path) -> None:
         loaded = unit_of_work.clients.get(client.id)
 
     assert loaded is not None
-    assert asdict(loaded) == asdict(client)
+    assert loaded.model_dump() == client.model_dump()
 
 
 def test_unit_of_work_rolls_back_uncommitted_changes_on_exception(tmp_path: Path) -> None:
