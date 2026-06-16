@@ -29,11 +29,11 @@ def admin_login(
     password: Annotated[str, Form(...)],
     settings: Annotated[Config, Depends(Provide[Container.settings])],
     password_hasher: Annotated[PasswordHasher, Depends(Provide[Container.password_hasher])],
-    unit_of_work: Annotated[UnitOfWork, Depends(Provide[Container.unit_of_work])],
+    uow: Annotated[UnitOfWork, Depends(Provide[Container.unit_of_work])],
 ) -> HTMLResponse | RedirectResponse:
-    with unit_of_work as transaction:
+    with uow:
         admin_user = authenticate_admin_user(
-            transaction,
+            uow,
             password_hasher,
             login=login,
             password=password,
@@ -43,7 +43,7 @@ def admin_login(
                 render_admin_login_page("Invalid credentials"), status_code=status.HTTP_401_UNAUTHORIZED
             )
 
-        transaction.commit()
+        uow.commit()
 
     response = RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
     set_admin_session_cookie(response, admin_user, settings)

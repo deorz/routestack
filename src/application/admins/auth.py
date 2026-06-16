@@ -3,7 +3,6 @@ from application.ports.unit_of_work import UnitOfWork
 from domain.admins.admin_user import AdminUser
 from domain.shared.errors import DomainValidationError
 from domain.shared.time import utc_now
-from domain.shared.validation import normalize_required_text
 
 
 def bootstrap_admin_user(
@@ -52,7 +51,14 @@ def authenticate_admin_user(
 
 
 def _normalize_login(login: str) -> str:
-    return normalize_required_text(login, "login")
+    if not isinstance(login, str):
+        raise DomainValidationError("login must be a string")
+
+    normalized_login = login.strip()
+    if not normalized_login:
+        raise DomainValidationError("login cannot be blank")
+
+    return normalized_login
 
 
 def _normalize_login_for_auth(login: str) -> str | None:

@@ -14,7 +14,7 @@ from presentation.http.session import verify_admin_session
 def get_current_admin_user(
     request: Request,
     settings: Annotated[Config, Depends(Provide[Container.settings])],
-    unit_of_work: Annotated[UnitOfWork, Depends(Provide[Container.unit_of_work])],
+    uow: Annotated[UnitOfWork, Depends(Provide[Container.unit_of_work])],
 ) -> AdminUser:
     session_token = request.cookies.get(settings.ADMIN_SESSION.COOKIE_NAME)
     if not session_token:
@@ -24,8 +24,8 @@ def get_current_admin_user(
     if admin_user_id is None:
         raise _unauthorized()
 
-    with unit_of_work as transaction:
-        admin_user = transaction.admins.get(admin_user_id)
+    with uow:
+        admin_user = uow.admins.get(admin_user_id)
 
     if admin_user is None or admin_user.disabled_at is not None:
         raise _unauthorized()

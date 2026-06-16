@@ -18,19 +18,14 @@ def ensure_enum[EnumT: Enum](value: object, enum_type: type[EnumT], field_name: 
     return value
 
 
-def normalize_required_text(value: str, field_name: str) -> str:
-    normalized = ensure_type(value, str, field_name).strip()
-    if not normalized:
-        raise DomainValidationError(f"{field_name} cannot be blank")
-
-    return normalized
-
-
 def normalize_optional_text(value: str | None, field_name: str) -> str | None:
     if value is None:
         return None
 
-    normalized = normalize_required_text(value, field_name)
+    normalized = ensure_type(value, str, field_name).strip()
+    if not normalized:
+        return None
+
     return normalized
 
 
@@ -40,7 +35,11 @@ def normalize_tags(values: Iterable[str] | None) -> tuple[str, ...]:
 
     tags: list[str] = []
     for value in values:
-        tags.append(normalize_required_text(value, "tags entry"))
+        tag = ensure_type(value, str, "tags entry").strip()
+        if not tag:
+            raise DomainValidationError("tags entry cannot be blank")
+
+        tags.append(tag)
     return tuple(tags)
 
 

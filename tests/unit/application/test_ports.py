@@ -69,7 +69,7 @@ class FakeUnitOfWork:
 def test_repository_and_unit_of_work_ports_accept_in_memory_implementations() -> None:
     repository = InMemoryClientRepository()
     admin_repository = InMemoryAdminUserRepository()
-    unit_of_work = FakeUnitOfWork(
+    uow = FakeUnitOfWork(
         admins=admin_repository,
         clients=repository,
         subscriptions=repository,
@@ -80,11 +80,11 @@ def test_repository_and_unit_of_work_ports_accept_in_memory_implementations() ->
 
     assert isinstance(repository, ClientRepository)
     assert isinstance(admin_repository, AdminUserRepository)
-    assert isinstance(unit_of_work, UnitOfWork)
+    assert isinstance(uow, UnitOfWork)
 
-    with unit_of_work as transaction:
-        transaction.clients.add(client)
-        transaction.commit()
+    with uow:
+        uow.clients.add(client)
+        uow.commit()
 
     assert repository.get(client.id) == client
-    assert unit_of_work.committed is True
+    assert uow.committed is True

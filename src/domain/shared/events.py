@@ -5,7 +5,7 @@ from domain.shared.time import utc_now
 
 
 class DomainEvent(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, validate_assignment=False)
+    model_config = ConfigDict(arbitrary_types_allowed=True, validate_assignment=True)
 
     event_id: EntityId = Field(default_factory=new_entity_id)
     occurred_at: AwareDatetime = Field(default_factory=utc_now)

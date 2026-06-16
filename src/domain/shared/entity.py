@@ -6,7 +6,7 @@ from domain.shared.validation import ensure_type
 
 
 class Entity(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, validate_assignment=False)
+    model_config = ConfigDict(arbitrary_types_allowed=True, validate_assignment=True)
 
     id: EntityId = Field(default_factory=new_entity_id)
     _domain_events: list[DomainEvent] = PrivateAttr(default_factory=list)

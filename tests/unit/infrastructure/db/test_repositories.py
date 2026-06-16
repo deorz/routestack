@@ -2,15 +2,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
-from domain.access_grants.access_grant import (
-    AccessGrant,
-    AccessGrantState,
-    AccessGrantStatus,
-    AccessGrantType,
-)
+from domain.access_grants.access_grant import AccessGrant
+from domain.access_grants.enums import AccessGrantState, AccessGrantStatus, AccessGrantType
 from domain.clients.client import Client
-from domain.operations.operation import Operation, OperationStatus, OperationType
-from domain.subscriptions.subscription import Subscription, SubscriptionStatus
+from domain.operations.enums import OperationStatus, OperationType
+from domain.operations.operation import Operation
+from domain.subscriptions.enums import SubscriptionStatus
+from domain.subscriptions.subscription import Subscription
 from infrastructure.db import Base, create_session_factory, create_sqlite_engine
 from infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 

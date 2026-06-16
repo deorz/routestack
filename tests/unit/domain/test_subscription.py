@@ -4,10 +4,10 @@ import pytest
 from pydantic import ValidationError
 
 from domain.shared.errors import DomainStateError
+from domain.subscriptions.enums import SubscriptionStatus
 from domain.subscriptions.subscription import (
     Subscription,
     SubscriptionRevisionCreated,
-    SubscriptionStatus,
 )
 
 

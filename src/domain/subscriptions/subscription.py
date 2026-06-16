@@ -1,28 +1,14 @@
-from enum import auto
-from typing import Annotated
+from typing import Self
 
-from pydantic import AwareDatetime, Field, NonNegativeInt, PositiveInt, StringConstraints, model_validator
+from pydantic import AwareDatetime, Field, NonNegativeInt, PositiveInt, model_validator
 
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.shared.events import DomainEvent
 from domain.shared.time import utc_now
-from domain.shared.value_enums import AutoNameStrEnum
-
-RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-
-
-class SubscriptionStatus(AutoNameStrEnum):
-    PENDING = auto()
-    PROVISIONING = auto()
-    ACTIVE = auto()
-    UPDATING = auto()
-    DEGRADED = auto()
-    SUSPENDED = auto()
-    EXPIRED = auto()
-    REVOKED = auto()
-    DELETED = auto()
+from domain.shared.types import RequiredText
+from domain.subscriptions.enums import SubscriptionStatus
 
 
 class SubscriptionRevisionCreated(DomainEvent):
@@ -46,7 +32,7 @@ class Subscription(Entity):
     updated_at: AwareDatetime = Field(default_factory=utc_now)
 
     @model_validator(mode="after")
-    def validate_public_token_split(self) -> "Subscription":
+    def validate_public_token_split(self) -> Self:
         if self.public_id == self.access_token_hash:
             raise DomainValidationError("public_id must differ from access_token_hash")
         return self

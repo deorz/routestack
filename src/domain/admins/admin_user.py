@@ -1,11 +1,8 @@
-from typing import Annotated
-
-from pydantic import AwareDatetime, Field, StringConstraints
+from pydantic import AwareDatetime, Field
 
 from domain.shared.entity import Entity
 from domain.shared.time import utc_now
-
-RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+from domain.shared.types import RequiredText
 
 
 class AdminUser(Entity):

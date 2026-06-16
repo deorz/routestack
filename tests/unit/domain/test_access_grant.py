@@ -2,11 +2,8 @@ from uuid import uuid4
 
 import pytest
 
-from domain.access_grants.access_grant import (
-    AccessGrant,
-    AccessGrantStatus,
-    AccessGrantType,
-)
+from domain.access_grants.access_grant import AccessGrant
+from domain.access_grants.enums import AccessGrantStatus, AccessGrantType
 from domain.shared.errors import DomainStateError
 
 

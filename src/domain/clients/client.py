@@ -1,14 +1,9 @@
-from typing import Annotated
-
-from pydantic import AwareDatetime, Field, StringConstraints
+from pydantic import AwareDatetime, Field
 
 from domain.shared.entity import Entity
 from domain.shared.errors import DomainStateError
 from domain.shared.time import utc_now
-from domain.shared.validation import normalize_required_text
-
-RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-OptionalText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] | None
+from domain.shared.types import OptionalText, RequiredText
 
 
 class Client(Entity):
@@ -23,7 +18,7 @@ class Client(Entity):
 
     def rename(self, display_name: str) -> None:
         self._ensure_mutable("rename")
-        self.display_name = normalize_required_text(display_name, "display_name")
+        self.display_name = display_name
         self.updated_at = utc_now()
 
     def soft_delete(self) -> None:

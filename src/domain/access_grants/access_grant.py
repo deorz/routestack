@@ -1,43 +1,12 @@
-from enum import auto
-from typing import Annotated
+from pydantic import AwareDatetime, Field
 
-from pydantic import AwareDatetime, Field, StringConstraints
-
+from domain.access_grants.enums import AccessGrantState, AccessGrantStatus, AccessGrantType
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError
 from domain.shared.time import utc_now
+from domain.shared.types import OptionalText, RequiredText
 from domain.shared.validation import normalize_optional_text
-from domain.shared.value_enums import AutoNameStrEnum
-
-RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-OptionalText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] | None
-
-
-class AccessGrantType(AutoNameStrEnum):
-    VLESS_REALITY = auto()
-    AMNEZIAWG = auto()
-    HYSTERIA = auto()
-    TELEGRAM_PROXY = auto()
-    SOCKS5 = auto()
-
-
-class AccessGrantStatus(AutoNameStrEnum):
-    PENDING = auto()
-    PROVISIONING = auto()
-    ACTIVE = auto()
-    DISABLING = auto()
-    DISABLED = auto()
-    FAILED = auto()
-    REVOKED = auto()
-
-
-class AccessGrantState(AutoNameStrEnum):
-    PENDING = auto()
-    ENABLED = auto()
-    DISABLED = auto()
-    FAILED = auto()
-    REVOKED = auto()
 
 
 class AccessGrant(Entity):

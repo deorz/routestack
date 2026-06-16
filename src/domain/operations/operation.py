@@ -1,39 +1,14 @@
-from enum import auto
-from typing import Annotated, Any
+from typing import Any, Self
 
-from pydantic import AwareDatetime, Field, NonNegativeInt, PositiveInt, StringConstraints, model_validator
+from pydantic import AwareDatetime, Field, NonNegativeInt, PositiveInt, model_validator
 
+from domain.operations.enums import OperationStatus, OperationType
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.shared.time import utc_now
+from domain.shared.types import OptionalText, RequiredText
 from domain.shared.validation import normalize_optional_text
-from domain.shared.value_enums import AutoNameStrEnum
-
-RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-OptionalText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] | None
-
-
-class OperationType(AutoNameStrEnum):
-    INSTALL_COMPONENT = auto()
-    APPLY_SERVICE_REVISION = auto()
-    START_SERVICE = auto()
-    STOP_SERVICE = auto()
-    RESTART_SERVICE = auto()
-    APPLY_FIREWALL_REVISION = auto()
-    CREATE_TUNNEL = auto()
-    REMOVE_TUNNEL = auto()
-    COLLECT_STATUS = auto()
-    COLLECT_LOGS = auto()
-    RUN_HEALTH_CHECK = auto()
-    MANAGE_CERTIFICATE = auto()
-
-
-class OperationStatus(AutoNameStrEnum):
-    PENDING = auto()
-    CLAIMED = auto()
-    SUCCEEDED = auto()
-    FAILED = auto()
 
 
 class Operation(Entity):
@@ -51,7 +26,7 @@ class Operation(Entity):
     updated_at: AwareDatetime = Field(default_factory=utc_now)
 
     @model_validator(mode="after")
-    def validate_attempt_limit(self) -> "Operation":
+    def validate_attempt_limit(self) -> Self:
         if self.attempts > self.max_attempts:
             raise DomainValidationError("attempts cannot exceed max_attempts")
         return self
