@@ -45,3 +45,20 @@ class SqlAlchemyOperationRepository(SqlAlchemyRepository[Operation, OperationOrm
             created_at=utc(orm.created_at),
             updated_at=utc(orm.updated_at),
         )
+
+    def find_claimable(self, *, limit: int = 10) -> list[Operation]:
+        orm_list = (
+            self._session.query(OperationOrm)
+            .filter(OperationOrm.status == OperationStatus.PENDING.value)
+            .filter(OperationOrm.attempts < OperationOrm.max_attempts)
+            .order_by(OperationOrm.created_at.asc())
+            .limit(limit)
+            .all()
+        )
+        return [self._from_orm_fn(orm) for orm in orm_list]
+
+    def find_by_idempotency_key(self, key: str) -> Operation | None:
+        orm = self._session.query(OperationOrm).filter(OperationOrm.idempotency_key == key).one_or_none()
+        if orm is None:
+            return None
+        return self._from_orm_fn(orm)

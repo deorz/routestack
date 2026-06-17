@@ -14,7 +14,7 @@ class SqlAlchemyAuditRecordRepository(SqlAlchemyRepository[AuditRecord, AuditRec
         return AuditRecordOrm(
             id=str(audit.id),
             actor_id=str(audit.actor_id) if audit.actor_id else None,
-            action=audit.action,
+            action=audit.action.value,
             entity_type=audit.entity_type,
             entity_id=str(audit.entity_id),
             audit_metadata=audit.metadata,

@@ -46,6 +46,10 @@ class OperationRepository(Protocol):
 
     def get(self, operation_id: EntityId) -> Operation | None: ...
 
+    def find_claimable(self, *, limit: int = 10) -> list[Operation]: ...
+
+    def find_by_idempotency_key(self, key: str) -> Operation | None: ...
+
 
 @runtime_checkable
 class SubscriptionRevisionRepository(Protocol):

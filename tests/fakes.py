@@ -12,6 +12,8 @@ from app_layer.ports.repositories import (
     SubscriptionRevisionRepository,
 )
 from domain.admins.admin_user import AdminUser
+from domain.operations.enums import OperationStatus
+from domain.operations.operation import Operation
 from domain.shared.entity_id import EntityId
 
 
@@ -24,6 +26,29 @@ class InMemoryRepository:
 
     def get(self, entity_id: EntityId) -> Any | None:
         return self.records.get(entity_id)
+
+
+@dataclass
+class InMemoryOperationRepository:
+    records: dict[EntityId, Operation] = field(default_factory=dict)
+
+    def add(self, operation: Operation) -> None:
+        self.records[operation.id] = operation
+
+    def get(self, operation_id: EntityId) -> Operation | None:
+        return self.records.get(operation_id)
+
+    def find_claimable(self, *, limit: int = 10) -> list[Operation]:
+        claimable = [
+            op for op in self.records.values() if op.status == OperationStatus.PENDING and op.attempts < op.max_attempts
+        ]
+        return sorted(claimable, key=lambda op: op.created_at)[:limit]
+
+    def find_by_idempotency_key(self, key: str) -> Operation | None:
+        for op in self.records.values():
+            if op.idempotency_key == key:
+                return op
+        return None
 
 
 @dataclass
@@ -50,7 +75,7 @@ class FakeUnitOfWork:
     clients: ClientRepository = field(default_factory=InMemoryRepository)
     subscriptions: SubscriptionRepository = field(default_factory=InMemoryRepository)
     access_grants: AccessGrantRepository = field(default_factory=InMemoryRepository)
-    operations: OperationRepository = field(default_factory=InMemoryRepository)
+    operations: OperationRepository = field(default_factory=InMemoryOperationRepository)
     subscription_revisions: SubscriptionRevisionRepository = field(default_factory=InMemoryRepository)
     audit_records: AuditRecordRepository = field(default_factory=InMemoryRepository)
     commits: int = 0
