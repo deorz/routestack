@@ -21,7 +21,7 @@ uv sync --no-dev
 Install the development environment:
 
 ```bash
-uv sync --group dev
+make requirements
 ```
 
 ## Development
@@ -29,31 +29,35 @@ uv sync --group dev
 Run tests:
 
 ```bash
-uv run --group dev pytest
+make test
 ```
 
-Run lint checks:
+Run lint and type checks:
 
 ```bash
-uv run --group dev ruff check .
+make lint
+make format
+make check
 ```
 
 Start the local HTTP app:
 
 ```bash
-uv run python main.py
+make start
 ```
+
+Copy `.env-defaults` into `.env` and override secrets before non-local deployment.
 
 ## Docker
 
 Build and run the app container:
 
 ```bash
-docker compose up --build app
+make start
 ```
 
 Run tests inside Docker without host Python dependencies:
 
 ```bash
-docker compose -f docker-compose.yml -f compose.test.yml run --rm test
+make docker-test
 ```

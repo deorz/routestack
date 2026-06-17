@@ -1,4 +1,4 @@
-from application.settings import AppSettings, Config
+from config import AppSettings, Config
 
 
 def test_healthcheck_returns_service_status(app_client_factory) -> None:

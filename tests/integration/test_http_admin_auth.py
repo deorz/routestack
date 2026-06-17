@@ -1,6 +1,5 @@
-from application.admins.auth import bootstrap_admin_user
-from application.settings import AdminSessionSettings, AppSettings, Config, DatabaseSettings, SecuritySettings
-from infrastructure.db import Base
+from config import AdminSessionSettings, AppSettings, Config, DatabaseSettings, SecuritySettings
+from infra.db import Base
 
 
 def _database_url(tmp_path, name: str) -> str:
@@ -9,7 +8,7 @@ def _database_url(tmp_path, name: str) -> str:
 
 def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_client_factory, tmp_path) -> None:
     settings = Config(
-        APP=AppSettings(NAME="InjectedStack", ENVIRONMENT="test"),
+        APP=AppSettings(NAME="InjectedStack"),
         DATABASE=DatabaseSettings(URL=_database_url(tmp_path, "admin-auth-flow.db")),
         SECURITY=SecuritySettings(SECRET_KEY="integration-secret"),
         ADMIN_SESSION=AdminSessionSettings(TTL_SECONDS=AdminSessionSettings.DEFAULT_TTL_SECONDS),
@@ -19,14 +18,10 @@ def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_clien
     engine = container.db_engine()
     Base.metadata.create_all(engine)
 
-    with container.unit_of_work() as unit_of_work:
-        bootstrap_admin_user(
-            unit_of_work,
-            container.password_hasher(),
-            login="root",
-            password="secret-123",
-        )
-        unit_of_work.commit()
+    container.admin_auth_service().bootstrap_user(
+        login="root",
+        password="secret-123",
+    )
 
     login_page = client.get("/admin/login")
     assert login_page.status_code == 200
@@ -60,7 +55,7 @@ def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_clien
 def test_admin_login_rejects_invalid_credentials_without_disclosing_reason(app_client_factory, tmp_path) -> None:
     client = app_client_factory(
         Config(
-            APP=AppSettings(ENVIRONMENT="test"),
+            APP=AppSettings(),
             DATABASE=DatabaseSettings(URL=_database_url(tmp_path, "admin-auth-invalid.db")),
             SECURITY=SecuritySettings(SECRET_KEY="integration-secret"),
         )
@@ -69,14 +64,10 @@ def test_admin_login_rejects_invalid_credentials_without_disclosing_reason(app_c
     engine = container.db_engine()
     Base.metadata.create_all(engine)
 
-    with container.unit_of_work() as unit_of_work:
-        bootstrap_admin_user(
-            unit_of_work,
-            container.password_hasher(),
-            login="root",
-            password="secret-123",
-        )
-        unit_of_work.commit()
+    container.admin_auth_service().bootstrap_user(
+        login="root",
+        password="secret-123",
+    )
 
     wrong_password = client.post(
         "/admin/login",

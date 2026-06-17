@@ -1,15 +1,12 @@
-from pydantic import AwareDatetime, Field
-
 from domain.access_grants.enums import AccessGrantState, AccessGrantStatus, AccessGrantType
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError
-from domain.shared.time import utc_now
+from domain.shared.timestamps import DatetimeMixin
 from domain.shared.types import OptionalText, RequiredText
-from domain.shared.validation import normalize_optional_text
 
 
-class AccessGrant(Entity):
+class AccessGrant(Entity, DatetimeMixin):
     subscription_id: EntityId
     service_instance_id: EntityId
     type: AccessGrantType
@@ -19,30 +16,28 @@ class AccessGrant(Entity):
     actual_state: AccessGrantState = AccessGrantState.PENDING
     external_reference: OptionalText = None
     last_error: OptionalText = None
-    created_at: AwareDatetime = Field(default_factory=utc_now)
-    updated_at: AwareDatetime = Field(default_factory=utc_now)
 
     def succeed(self) -> None:
-        self._ensure_mutable("succeed")
+        self._ensure_not_terminal()
         self.status = AccessGrantStatus.ACTIVE
         self.desired_state = AccessGrantState.ENABLED
         self.actual_state = AccessGrantState.ENABLED
         self.last_error = None
-        self.updated_at = utc_now()
+        self._record_update()
 
     def disable(self) -> None:
-        self._ensure_not_terminal("disable")
+        self._ensure_not_terminal()
         self.status = AccessGrantStatus.DISABLED
         self.desired_state = AccessGrantState.DISABLED
         self.actual_state = AccessGrantState.DISABLED
-        self.updated_at = utc_now()
+        self._record_update()
 
     def fail(self, error_message: str | None = None) -> None:
-        self._ensure_not_terminal("fail")
+        self._ensure_not_terminal()
         self.status = AccessGrantStatus.FAILED
         self.actual_state = AccessGrantState.FAILED
-        self.last_error = normalize_optional_text(error_message, "error_message")
-        self.updated_at = utc_now()
+        self.last_error = error_message
+        self._record_update()
 
     def revoke(self) -> None:
         if self.status == AccessGrantStatus.REVOKED:
@@ -51,12 +46,8 @@ class AccessGrant(Entity):
         self.status = AccessGrantStatus.REVOKED
         self.desired_state = AccessGrantState.DISABLED
         self.actual_state = AccessGrantState.REVOKED
-        self.updated_at = utc_now()
+        self._record_update()
 
-    def _ensure_mutable(self, action: str) -> None:
+    def _ensure_not_terminal(self) -> None:
         if self.status in {AccessGrantStatus.REVOKED, AccessGrantStatus.DISABLED}:
-            raise DomainStateError(f"access grant cannot {action} from {self.status}")
-
-    def _ensure_not_terminal(self, action: str) -> None:
-        if self.status in {AccessGrantStatus.REVOKED, AccessGrantStatus.DISABLED}:
-            raise DomainStateError(f"access grant cannot {action} from {self.status}")
+            raise DomainStateError(f"access grant is in terminal state {self.status}")

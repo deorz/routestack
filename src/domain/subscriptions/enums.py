@@ -1,9 +1,7 @@
-from enum import auto
-
-from domain.shared.value_enums import AutoNameStrEnum
+from enum import StrEnum, auto
 
 
-class SubscriptionStatus(AutoNameStrEnum):
+class SubscriptionStatus(StrEnum):
     PENDING = auto()
     PROVISIONING = auto()
     ACTIVE = auto()

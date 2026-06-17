@@ -23,18 +23,20 @@ RUN uv sync --frozen --group dev --no-install-project
 
 FROM runtime-deps AS runtime
 
-COPY main.py ./
 COPY src ./src
+COPY alembic.ini ./
+COPY migrations ./migrations
 
 EXPOSE 8000
 
-CMD ["python", "main.py"]
+CMD ["python", "src/manage.py"]
 
 FROM test-deps AS test
 
-COPY main.py ./
 COPY src ./src
 COPY tests ./tests
+COPY alembic.ini ./
+COPY migrations ./migrations
 COPY Dockerfile docker-compose.yml compose.test.yml .dockerignore ./
 
 CMD ["uv", "run", "--group", "dev", "pytest"]
