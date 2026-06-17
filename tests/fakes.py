@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from types import TracebackType
 from typing import Any
 
@@ -20,9 +19,17 @@ from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 
 
-@dataclass
+class FakePasswordHasher:
+    def hash_password(self, password: str) -> str:
+        return f"hashed::{password}"
+
+    def verify_password(self, password: str, password_hash: str) -> bool:
+        return password_hash == self.hash_password(password)
+
+
 class InMemoryRepository:
-    records: dict[EntityId, Any] = field(default_factory=dict)
+    def __init__(self) -> None:
+        self.records: dict[EntityId, Any] = {}
 
     def add(self, entity: Any) -> None:
         self.records[entity.id] = entity
@@ -31,9 +38,9 @@ class InMemoryRepository:
         return self.records.get(entity_id)
 
 
-@dataclass
 class InMemoryOperationRepository:
-    records: dict[EntityId, Operation] = field(default_factory=dict)
+    def __init__(self) -> None:
+        self.records: dict[EntityId, Operation] = {}
 
     def add(self, operation: Operation) -> None:
         self.records[operation.id] = operation
@@ -54,9 +61,9 @@ class InMemoryOperationRepository:
         return None
 
 
-@dataclass
 class InMemoryAdminUserRepository:
-    admins: dict[EntityId, AdminUser] = field(default_factory=dict)
+    def __init__(self) -> None:
+        self.admins: dict[EntityId, AdminUser] = {}
 
     def add(self, admin_user: AdminUser) -> None:
         self.admins[admin_user.id] = admin_user
@@ -71,19 +78,30 @@ class InMemoryAdminUserRepository:
         return None
 
 
-@dataclass
 class FakeUnitOfWork:
-    admins: AdminUserRepository = field(default_factory=InMemoryAdminUserRepository)
-    clients: ClientRepository = field(default_factory=InMemoryRepository)
-    subscriptions: SubscriptionRepository = field(default_factory=InMemoryRepository)
-    access_grants: AccessGrantRepository = field(default_factory=InMemoryRepository)
-    operations: OperationRepository = field(default_factory=InMemoryOperationRepository)
-    subscription_revisions: SubscriptionRevisionRepository = field(default_factory=InMemoryRepository)
-    audit_records: AuditRecordRepository = field(default_factory=InMemoryRepository)
-    outbox_messages: OutboxMessageRepository = field(default_factory=InMemoryRepository)
-    commits: int = 0
-    rollbacks: int = 0
-    shutdowns: int = 0
+    def __init__(
+        self,
+        *,
+        admins: AdminUserRepository | None = None,
+        clients: ClientRepository | None = None,
+        subscriptions: SubscriptionRepository | None = None,
+        access_grants: AccessGrantRepository | None = None,
+        operations: OperationRepository | None = None,
+        subscription_revisions: SubscriptionRevisionRepository | None = None,
+        audit_records: AuditRecordRepository | None = None,
+        outbox_messages: OutboxMessageRepository | None = None,
+    ) -> None:
+        self.admins = admins or InMemoryAdminUserRepository()
+        self.clients = clients or InMemoryRepository()
+        self.subscriptions = subscriptions or InMemoryRepository()
+        self.access_grants = access_grants or InMemoryRepository()
+        self.operations = operations or InMemoryOperationRepository()
+        self.subscription_revisions = subscription_revisions or InMemoryRepository()
+        self.audit_records = audit_records or InMemoryRepository()
+        self.outbox_messages = outbox_messages or InMemoryRepository()
+        self.commits = 0
+        self.rollbacks = 0
+        self.shutdowns = 0
 
     def __enter__(self) -> "FakeUnitOfWork":
         return self
