@@ -5,6 +5,7 @@ from app_layer.ports.repositories import (
     AuditRecordRepository,
     ClientRepository,
     OperationRepository,
+    OutboxMessageRepository,
     SubscriptionRepository,
     SubscriptionRevisionRepository,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "AuditRecordRepository",
     "ClientRepository",
     "OperationRepository",
+    "OutboxMessageRepository",
     "PasswordHasher",
     "SubscriptionRepository",
     "SubscriptionRevisionRepository",

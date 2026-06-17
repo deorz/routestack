@@ -5,6 +5,7 @@ from domain.admins.admin_user import AdminUser
 from domain.clients.client import Client
 from domain.operations.audit import AuditRecord
 from domain.operations.operation import Operation
+from domain.operations.outbox import OutboxMessage
 from domain.shared.entity_id import EntityId
 from domain.subscriptions.revision import SubscriptionRevision
 from domain.subscriptions.subscription import Subscription
@@ -63,3 +64,10 @@ class AuditRecordRepository(Protocol):
     def add(self, audit_record: AuditRecord) -> None: ...
 
     def get(self, audit_record_id: EntityId) -> AuditRecord | None: ...
+
+
+@runtime_checkable
+class OutboxMessageRepository(Protocol):
+    def add(self, message: OutboxMessage) -> None: ...
+
+    def get(self, message_id: EntityId) -> OutboxMessage | None: ...

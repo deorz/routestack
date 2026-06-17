@@ -4,6 +4,7 @@ from infra.db.repositories.audit_records import SqlAlchemyAuditRecordRepository
 from infra.db.repositories.base import SqlAlchemyRepository
 from infra.db.repositories.clients import SqlAlchemyClientRepository
 from infra.db.repositories.operations import SqlAlchemyOperationRepository
+from infra.db.repositories.outbox_messages import SqlAlchemyOutboxMessageRepository
 from infra.db.repositories.subscription_revisions import SqlAlchemySubscriptionRevisionRepository
 from infra.db.repositories.subscriptions import SqlAlchemySubscriptionRepository
 
@@ -13,6 +14,7 @@ __all__ = [
     "SqlAlchemyAuditRecordRepository",
     "SqlAlchemyClientRepository",
     "SqlAlchemyOperationRepository",
+    "SqlAlchemyOutboxMessageRepository",
     "SqlAlchemyRepository",
     "SqlAlchemySubscriptionRepository",
     "SqlAlchemySubscriptionRevisionRepository",

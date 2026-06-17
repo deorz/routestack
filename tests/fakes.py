@@ -8,6 +8,7 @@ from app_layer.ports.repositories import (
     AuditRecordRepository,
     ClientRepository,
     OperationRepository,
+    OutboxMessageRepository,
     SubscriptionRepository,
     SubscriptionRevisionRepository,
 )
@@ -78,6 +79,7 @@ class FakeUnitOfWork:
     operations: OperationRepository = field(default_factory=InMemoryOperationRepository)
     subscription_revisions: SubscriptionRevisionRepository = field(default_factory=InMemoryRepository)
     audit_records: AuditRecordRepository = field(default_factory=InMemoryRepository)
+    outbox_messages: OutboxMessageRepository = field(default_factory=InMemoryRepository)
     commits: int = 0
     rollbacks: int = 0
     shutdowns: int = 0

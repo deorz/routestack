@@ -7,9 +7,11 @@ from app_layer.ports.repositories import (
     AuditRecordRepository,
     ClientRepository,
     OperationRepository,
+    OutboxMessageRepository,
     SubscriptionRepository,
     SubscriptionRevisionRepository,
 )
+from domain.shared.entity import Entity
 
 
 @runtime_checkable
@@ -21,6 +23,9 @@ class UnitOfWork(Protocol):
     operations: OperationRepository
     subscription_revisions: SubscriptionRevisionRepository
     audit_records: AuditRecordRepository
+    outbox_messages: OutboxMessageRepository
+
+    def track(self, entity: Entity) -> None: ...
 
     def __enter__(self) -> Self: ...
 
