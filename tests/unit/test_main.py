@@ -1,4 +1,4 @@
-import main
+import manage
 
 
 def test_run_server_uses_settings_for_uvicorn(monkeypatch) -> None:
@@ -10,12 +10,12 @@ def test_run_server_uses_settings_for_uvicorn(monkeypatch) -> None:
     def fake_run(**kwargs: object) -> None:
         captured.update(kwargs)
 
-    monkeypatch.setattr(main.uvicorn, "run", fake_run)
+    monkeypatch.setattr(manage.uvicorn, "run", fake_run)
 
-    main.run_server()
+    manage.run_server()
 
     assert captured == {
-        "app": "presentation.http.app:create_app",
+        "app": "api.rest.app:create_app",
         "factory": True,
         "host": "127.0.0.1",
         "port": 9000,

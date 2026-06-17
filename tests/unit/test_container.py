@@ -1,12 +1,11 @@
-from application.settings import AppSettings, Config, DatabaseSettings, SecuritySettings
+from config import AppSettings, Config, DatabaseSettings, SecuritySettings
+from containers import create_container
 from domain.clients.client import Client
-from infrastructure.container import create_container
-from infrastructure.db import Base
+from infra.db import Base
 
 
 def test_container_provides_settings_from_environment(monkeypatch) -> None:
     monkeypatch.setenv("ROUTESTACK_APP_NAME", "RouteStack Test")
-    monkeypatch.setenv("ROUTESTACK_APP_ENVIRONMENT", "test")
     monkeypatch.setenv("ROUTESTACK_DATABASE_URL", "sqlite:///./test.db")
     monkeypatch.setenv("ROUTESTACK_SECURITY_SECRET_KEY", "test-secret")
 
@@ -16,7 +15,6 @@ def test_container_provides_settings_from_environment(monkeypatch) -> None:
 
     assert isinstance(settings, Config)
     assert settings.APP.NAME == "RouteStack Test"
-    assert settings.APP.ENVIRONMENT == "test"
     assert settings.DATABASE.URL == "sqlite:///./test.db"
     assert settings.SECURITY.SECRET_KEY == "test-secret"
 
@@ -47,7 +45,6 @@ def test_container_wires_database_unit_of_work(tmp_path) -> None:
 
         with container.unit_of_work() as unit_of_work:
             unit_of_work.clients.add(client)
-            unit_of_work.commit()
 
         with container.unit_of_work() as unit_of_work:
             loaded = unit_of_work.clients.get(client.id)

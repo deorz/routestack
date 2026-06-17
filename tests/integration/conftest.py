@@ -3,9 +3,9 @@ from collections.abc import Callable
 import pytest
 from fastapi.testclient import TestClient
 
-from application.settings import Config
-from infrastructure.container import create_container
-from presentation.http.app import create_app
+from api.rest.app import create_app
+from config import Config
+from containers import create_container
 
 
 @pytest.fixture

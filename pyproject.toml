@@ -18,18 +18,38 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "bandit>=1.8.0",
     "httpx>=0.28.0",
+    "pyrefly>=0.43.0",
     "pytest>=8.3.0",
     "ruff>=0.8.0",
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 testpaths = ["tests"]
+filterwarnings = [
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated:starlette.exceptions.StarletteDeprecationWarning",
+]
 
 [tool.ruff]
 line-length = 120
 target-version = "py313"
 
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RET", "RUF"]
+ignore = [
+    # FastAPI dependency defaults intentionally call helper constructors.
+    "B008",
+]
+
+
+[tool.pyrefly]
+project-includes = ["src"]
+project-excludes = ["tests"]
+search-path = ["src"]
+python-version = "3.13"
