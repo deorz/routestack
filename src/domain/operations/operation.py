@@ -8,7 +8,6 @@ from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.shared.time import utc_now
 from domain.shared.types import OptionalText, RequiredText
-from domain.shared.validation import normalize_optional_text
 
 
 class Operation(Entity):
@@ -47,7 +46,7 @@ class Operation(Entity):
         self.updated_at = now
 
     def succeed(self) -> None:
-        self._ensure_claimed("succeed")
+        self._ensure_claimed()
         now = utc_now()
         self.status = OperationStatus.SUCCEEDED
         self.finished_at = now
@@ -55,22 +54,22 @@ class Operation(Entity):
         self.updated_at = now
 
     def fail_retryable(self, error_message: str | None = None) -> None:
-        self._ensure_claimed("fail")
+        self._ensure_claimed()
         now = utc_now()
-        self.last_error = normalize_optional_text(error_message, "error_message")
+        self.last_error = error_message
         self.finished_at = now
         attempts_exhausted = self.attempts >= self.max_attempts
         self.status = OperationStatus.FAILED if attempts_exhausted else OperationStatus.PENDING
         self.updated_at = now
 
     def fail_terminal(self, error_message: str | None = None) -> None:
-        self._ensure_claimed("fail")
+        self._ensure_claimed()
         now = utc_now()
         self.status = OperationStatus.FAILED
         self.finished_at = now
-        self.last_error = normalize_optional_text(error_message, "error_message")
+        self.last_error = error_message
         self.updated_at = now
 
-    def _ensure_claimed(self, action: str) -> None:
+    def _ensure_claimed(self) -> None:
         if self.status != OperationStatus.CLAIMED:
-            raise DomainStateError(f"operation can only {action} while CLAIMED")
+            raise DomainStateError("operation must be CLAIMED")

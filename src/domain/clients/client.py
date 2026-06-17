@@ -17,7 +17,7 @@ class Client(Entity):
     updated_at: AwareDatetime = Field(default_factory=utc_now)
 
     def rename(self, display_name: str) -> None:
-        self._ensure_mutable("rename")
+        self._ensure_mutable()
         self.display_name = display_name
         self.updated_at = utc_now()
 
@@ -29,6 +29,6 @@ class Client(Entity):
         self.deleted_at = utc_now()
         self.updated_at = utc_now()
 
-    def _ensure_mutable(self, action: str) -> None:
+    def _ensure_mutable(self) -> None:
         if self.deleted_at is not None:
-            raise DomainStateError(f"client cannot {action} after soft delete")
+            raise DomainStateError("client was soft-deleted")

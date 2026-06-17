@@ -2,7 +2,6 @@ from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 from domain.shared.entity_id import EntityId, new_entity_id
 from domain.shared.events import DomainEvent
-from domain.shared.validation import ensure_type
 
 
 class Entity(BaseModel):
@@ -12,7 +11,7 @@ class Entity(BaseModel):
     _domain_events: list[DomainEvent] = PrivateAttr(default_factory=list)
 
     def record_domain_event(self, event: DomainEvent) -> None:
-        self._domain_events.append(ensure_type(event, DomainEvent, "event"))
+        self._domain_events.append(event)
 
     def pull_domain_events(self) -> tuple[DomainEvent, ...]:
         events = tuple(self._domain_events)

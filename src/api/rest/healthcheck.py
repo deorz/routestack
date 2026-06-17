@@ -11,7 +11,5 @@ router = APIRouter()
 
 @router.get("/healthz", include_in_schema=False)
 @inject
-def healthcheck(
-    settings: Annotated[Config, Depends(Provide[Container.settings])],
-) -> dict[str, str]:
+def healthcheck(settings: Annotated[Config, Depends(Provide[Container.settings])]) -> dict[str, str]:
     return {"status": "ok", "service": settings.APP.NAME}

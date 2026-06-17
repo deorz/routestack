@@ -1,9 +1,7 @@
-from enum import auto
-
-from domain.shared.value_enums import AutoNameStrEnum
+from enum import StrEnum, auto
 
 
-class OperationType(AutoNameStrEnum):
+class OperationType(StrEnum):
     INSTALL_COMPONENT = auto()
     APPLY_SERVICE_REVISION = auto()
     START_SERVICE = auto()
@@ -18,7 +16,7 @@ class OperationType(AutoNameStrEnum):
     MANAGE_CERTIFICATE = auto()
 
 
-class OperationStatus(AutoNameStrEnum):
+class OperationStatus(StrEnum):
     PENDING = auto()
     CLAIMED = auto()
     SUCCEEDED = auto()

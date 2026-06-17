@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, NoReturn
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import Depends, HTTPException, Request, status
@@ -15,21 +15,21 @@ from domain.admins.admin_user import AdminUser
 def get_current_admin_user(
     request: Request,
     settings: Annotated[Config, Depends(Provide[Container.settings])],
-    admin_auth_service: Annotated[AdminAuthenticationService, Depends(Provide[Container.admin_auth_service])],
+    service: Annotated[AdminAuthenticationService, Depends(Provide[Container.admin_auth_service])],
 ) -> AdminUser:
     session_token = request.cookies.get(settings.ADMIN_SESSION.COOKIE_NAME)
     if not session_token:
-        raise _unauthorized()
+        _unauthorized()
 
     admin_user_id = verify_admin_session(session_token, settings.SECURITY.SECRET_KEY)
     if admin_user_id is None:
-        raise _unauthorized()
+        _unauthorized()
 
     try:
-        return admin_auth_service.get_enabled_user(admin_user_id)
+        return service.get_enabled_user(admin_user_id)
     except AdminUserNotFoundError:
-        raise _unauthorized() from None
+        _unauthorized()
 
 
-def _unauthorized() -> HTTPException:
-    return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+def _unauthorized() -> NoReturn:
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")

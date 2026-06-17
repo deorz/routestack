@@ -3,6 +3,7 @@ from typing import Protocol
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import URL, Engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import ConnectionPoolEntry
 
 
 class DbApiCursor(Protocol):
@@ -27,7 +28,7 @@ def create_sqlite_engine(
     engine = create_engine(url, echo=echo)
 
     @event.listens_for(engine, "connect")
-    def _configure_sqlite_connection(dbapi_connection: DbApiConnection, connection_record: object) -> None:
+    def _configure_sqlite_connection(dbapi_connection: DbApiConnection, connection_record: ConnectionPoolEntry) -> None:
         del connection_record
 
         cursor = dbapi_connection.cursor()

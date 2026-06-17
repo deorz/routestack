@@ -41,16 +41,12 @@ def admin_login(
 
 @router.post("/admin/logout", include_in_schema=False, response_model=None)
 @inject
-def admin_logout(
-    settings: Annotated[Config, Depends(Provide[Container.settings])],
-) -> RedirectResponse:
+def admin_logout(settings: Annotated[Config, Depends(Provide[Container.settings])]) -> RedirectResponse:
     response = RedirectResponse("/admin/login", status_code=status.HTTP_303_SEE_OTHER)
     clear_admin_session_cookie(response, settings)
     return response
 
 
 @router.get("/admin", include_in_schema=False)
-def admin_smoke(
-    current_admin_user: Annotated[AdminUser, Depends(get_current_admin_user)],
-) -> dict[str, str]:
-    return {"status": "ok", "login": current_admin_user.login}
+def admin_smoke(user: Annotated[AdminUser, Depends(get_current_admin_user)]) -> dict[str, str]:
+    return {"status": "ok", "login": user.login}

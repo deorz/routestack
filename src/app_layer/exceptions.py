@@ -1,2 +1,2 @@
-class AppLayerError(Exception):
+class ApplicationError(Exception):
     """Base class for application-layer failures."""

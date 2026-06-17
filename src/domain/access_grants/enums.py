@@ -1,9 +1,7 @@
-from enum import auto
-
-from domain.shared.value_enums import AutoNameStrEnum
+from enum import StrEnum, auto
 
 
-class AccessGrantType(AutoNameStrEnum):
+class AccessGrantType(StrEnum):
     VLESS_REALITY = auto()
     AMNEZIAWG = auto()
     HYSTERIA = auto()
@@ -11,7 +9,7 @@ class AccessGrantType(AutoNameStrEnum):
     SOCKS5 = auto()
 
 
-class AccessGrantStatus(AutoNameStrEnum):
+class AccessGrantStatus(StrEnum):
     PENDING = auto()
     PROVISIONING = auto()
     ACTIVE = auto()
@@ -21,7 +19,7 @@ class AccessGrantStatus(AutoNameStrEnum):
     REVOKED = auto()
 
 
-class AccessGrantState(AutoNameStrEnum):
+class AccessGrantState(StrEnum):
     PENDING = auto()
     ENABLED = auto()
     DISABLED = auto()

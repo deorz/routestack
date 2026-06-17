@@ -11,3 +11,6 @@ class AdminUser(Entity):
     last_login_at: AwareDatetime | None = None
     disabled_at: AwareDatetime | None = None
     created_at: AwareDatetime = Field(default_factory=utc_now)
+
+    def record_login(self) -> None:
+        self.last_login_at = utc_now()

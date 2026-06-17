@@ -1,4 +1,4 @@
-from starlette.responses import Response
+from fastapi.responses import Response
 
 from api.rest.session import sign_admin_session
 from config import Config
