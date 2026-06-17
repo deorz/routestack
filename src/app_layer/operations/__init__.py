@@ -1,3 +1,3 @@
-from app_layer.operations.worker import OperationWorker
+from app_layer.operations.worker import OperationQueue
 
-__all__ = ["OperationWorker"]
+__all__ = ["OperationQueue"]

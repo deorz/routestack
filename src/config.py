@@ -4,6 +4,12 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+class RedisSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_prefix="ROUTESTACK_REDIS_", extra="ignore")
+
+    URL: str = "redis://localhost:6379/0"
+
+
 class AppSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="ROUTESTACK_APP_", extra="ignore")
 
@@ -58,3 +64,5 @@ class Config(BaseSettings):
     ADMIN_SESSION: AdminSessionSettings = Field(default_factory=AdminSessionSettings)
 
     API: APIConfig = Field(default_factory=APIConfig)
+
+    REDIS: RedisSettings = Field(default_factory=RedisSettings)

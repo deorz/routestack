@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 from config import Config
 from containers import create_container
+from worker import run_worker
 
 
 class UvicornConfig(BaseModel):
@@ -26,3 +27,8 @@ def run_server() -> None:
 
 def main() -> None:
     run_server()
+
+
+def main_worker() -> None:
+    settings = create_container().settings()
+    run_worker(settings.REDIS.URL)
