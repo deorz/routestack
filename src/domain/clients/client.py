@@ -3,11 +3,11 @@ from pydantic import AwareDatetime, Field
 from domain.shared.entity import Entity
 from domain.shared.errors import DomainStateError
 from domain.shared.time import utc_now
-from domain.shared.timestamps import TimestampedMixin
+from domain.shared.timestamps import DatetimeMixin
 from domain.shared.types import OptionalText, RequiredText
 
 
-class Client(Entity, TimestampedMixin):
+class Client(Entity, DatetimeMixin):
     display_name: RequiredText
     email: OptionalText = None
     comment: OptionalText = None
@@ -18,7 +18,7 @@ class Client(Entity, TimestampedMixin):
     def rename(self, display_name: str) -> None:
         self._ensure_mutable()
         self.display_name = display_name
-        self._touch()
+        self._record_update()
 
     def soft_delete(self) -> None:
         if self.deleted_at is not None:
@@ -26,7 +26,7 @@ class Client(Entity, TimestampedMixin):
 
         self.enabled = False
         self.deleted_at = utc_now()
-        self._touch()
+        self._record_update()
 
     def _ensure_mutable(self) -> None:
         if self.deleted_at is not None:

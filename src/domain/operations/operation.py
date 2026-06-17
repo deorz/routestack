@@ -7,11 +7,11 @@ from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.shared.time import utc_now
-from domain.shared.timestamps import TimestampedMixin
+from domain.shared.timestamps import DatetimeMixin
 from domain.shared.types import OptionalText, RequiredText
 
 
-class Operation(Entity, TimestampedMixin):
+class Operation(Entity, DatetimeMixin):
     type: OperationType
     node_id: EntityId
     payload: dict[str, Any]
@@ -42,7 +42,7 @@ class Operation(Entity, TimestampedMixin):
         self.started_at = now
         self.finished_at = None
         self.last_error = None
-        self._touch()
+        self._record_update()
 
     def succeed(self) -> None:
         self._ensure_claimed()
@@ -50,7 +50,7 @@ class Operation(Entity, TimestampedMixin):
         self.status = OperationStatus.SUCCEEDED
         self.finished_at = now
         self.last_error = None
-        self._touch()
+        self._record_update()
 
     def fail_retryable(self, error_message: str | None = None) -> None:
         self._ensure_claimed()
@@ -59,7 +59,7 @@ class Operation(Entity, TimestampedMixin):
         self.finished_at = now
         attempts_exhausted = self.attempts >= self.max_attempts
         self.status = OperationStatus.FAILED if attempts_exhausted else OperationStatus.PENDING
-        self._touch()
+        self._record_update()
 
     def fail_terminal(self, error_message: str | None = None) -> None:
         self._ensure_claimed()
@@ -67,7 +67,7 @@ class Operation(Entity, TimestampedMixin):
         self.status = OperationStatus.FAILED
         self.finished_at = now
         self.last_error = error_message
-        self._touch()
+        self._record_update()
 
     def _ensure_claimed(self) -> None:
         if self.status != OperationStatus.CLAIMED:

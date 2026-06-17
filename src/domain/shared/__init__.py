@@ -3,10 +3,11 @@ from domain.shared.entity_id import EntityId, new_entity_id
 from domain.shared.errors import DomainError, DomainStateError, DomainValidationError
 from domain.shared.events import DomainEvent
 from domain.shared.time import Clock, SystemClock, utc_now
-from domain.shared.timestamps import TimestampedMixin
+from domain.shared.timestamps import DatetimeMixin
 
 __all__ = [
     "Clock",
+    "DatetimeMixin",
     "DomainError",
     "DomainEvent",
     "DomainStateError",
@@ -14,7 +15,6 @@ __all__ = [
     "Entity",
     "EntityId",
     "SystemClock",
-    "TimestampedMixin",
     "new_entity_id",
     "utc_now",
 ]

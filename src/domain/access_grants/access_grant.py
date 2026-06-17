@@ -2,11 +2,11 @@ from domain.access_grants.enums import AccessGrantState, AccessGrantStatus, Acce
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError
-from domain.shared.timestamps import TimestampedMixin
+from domain.shared.timestamps import DatetimeMixin
 from domain.shared.types import OptionalText, RequiredText
 
 
-class AccessGrant(Entity, TimestampedMixin):
+class AccessGrant(Entity, DatetimeMixin):
     subscription_id: EntityId
     service_instance_id: EntityId
     type: AccessGrantType
@@ -23,21 +23,21 @@ class AccessGrant(Entity, TimestampedMixin):
         self.desired_state = AccessGrantState.ENABLED
         self.actual_state = AccessGrantState.ENABLED
         self.last_error = None
-        self._touch()
+        self._record_update()
 
     def disable(self) -> None:
         self._ensure_not_terminal()
         self.status = AccessGrantStatus.DISABLED
         self.desired_state = AccessGrantState.DISABLED
         self.actual_state = AccessGrantState.DISABLED
-        self._touch()
+        self._record_update()
 
     def fail(self, error_message: str | None = None) -> None:
         self._ensure_not_terminal()
         self.status = AccessGrantStatus.FAILED
         self.actual_state = AccessGrantState.FAILED
         self.last_error = error_message
-        self._touch()
+        self._record_update()
 
     def revoke(self) -> None:
         if self.status == AccessGrantStatus.REVOKED:
@@ -46,7 +46,7 @@ class AccessGrant(Entity, TimestampedMixin):
         self.status = AccessGrantStatus.REVOKED
         self.desired_state = AccessGrantState.DISABLED
         self.actual_state = AccessGrantState.REVOKED
-        self._touch()
+        self._record_update()
 
     def _ensure_not_terminal(self) -> None:
         if self.status in {AccessGrantStatus.REVOKED, AccessGrantStatus.DISABLED}:
