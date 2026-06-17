@@ -3,6 +3,7 @@ from typing import Self
 
 from sqlalchemy.orm import Session, sessionmaker
 
+from app_layer.exceptions import IdempotencyConflictError
 from domain.operations.outbox import OutboxMessage
 from domain.shared.entity import Entity
 from domain.shared.time import utc_now
@@ -48,6 +49,11 @@ class SqlAlchemyUnitOfWork:
                 self.commit()
         finally:
             self.shutdown()
+
+    def ensure_idempotent(self, key: str) -> None:
+        existing = self.operations.find_by_idempotency_key(key)
+        if existing is not None:
+            raise IdempotencyConflictError(key)
 
     def track(self, entity: Entity) -> None:
         self._tracked.add(entity)

@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from types import TracebackType
 from typing import Any
 
+from app_layer.exceptions import IdempotencyConflictError
 from app_layer.ports.repositories import (
     AccessGrantRepository,
     AdminUserRepository,
@@ -67,7 +68,6 @@ class InMemoryAdminUserRepository:
         for admin_user in self.admins.values():
             if admin_user.login == login:
                 return admin_user
-
         return None
 
 
@@ -85,9 +85,6 @@ class FakeUnitOfWork:
     rollbacks: int = 0
     shutdowns: int = 0
 
-    def track(self, entity: Entity) -> None:
-        pass
-
     def __enter__(self) -> "FakeUnitOfWork":
         return self
 
@@ -102,6 +99,14 @@ class FakeUnitOfWork:
         else:
             self.commit()
         self.shutdown()
+
+    def track(self, entity: Entity) -> None:
+        pass
+
+    def ensure_idempotent(self, key: str) -> None:
+        existing = self.operations.find_by_idempotency_key(key)
+        if existing is not None:
+            raise IdempotencyConflictError(key)
 
     def commit(self) -> None:
         self.commits += 1
