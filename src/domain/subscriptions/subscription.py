@@ -1,12 +1,13 @@
 from typing import Self
 
-from pydantic import AwareDatetime, Field, NonNegativeInt, PositiveInt, model_validator
+from pydantic import AwareDatetime, NonNegativeInt, PositiveInt, model_validator
 
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.shared.events import DomainEvent
 from domain.shared.time import utc_now
+from domain.shared.timestamps import TimestampedMixin
 from domain.shared.types import RequiredText
 from domain.subscriptions.enums import SubscriptionStatus
 
@@ -17,7 +18,7 @@ class SubscriptionRevisionCreated(DomainEvent):
     safe_change_summary: RequiredText
 
 
-class Subscription(Entity):
+class Subscription(Entity, TimestampedMixin):
     public_id: RequiredText
     access_token_hash: RequiredText
     client_id: EntityId
@@ -28,8 +29,6 @@ class Subscription(Entity):
     suspended_at: AwareDatetime | None = None
     revoked_at: AwareDatetime | None = None
     deleted_at: AwareDatetime | None = None
-    created_at: AwareDatetime = Field(default_factory=utc_now)
-    updated_at: AwareDatetime = Field(default_factory=utc_now)
 
     @model_validator(mode="after")
     def validate_public_token_split(self) -> Self:
@@ -44,15 +43,15 @@ class Subscription(Entity):
             safe_change_summary=summary,
         )
         self.revision += 1
-        self.updated_at = utc_now()
+        self._touch()
         self.record_domain_event(event)
         return event
 
     def suspend(self) -> None:
-        self._ensure_active_lifecycle("suspend")
+        self._ensure_active_lifecycle()
         self.status = SubscriptionStatus.SUSPENDED
         self.suspended_at = utc_now()
-        self.updated_at = utc_now()
+        self._touch()
 
     def resume(self) -> None:
         if self.status != SubscriptionStatus.SUSPENDED:
@@ -60,7 +59,7 @@ class Subscription(Entity):
 
         self.status = SubscriptionStatus.ACTIVE
         self.suspended_at = None
-        self.updated_at = utc_now()
+        self._touch()
 
     def revoke(self) -> None:
         if self.status == SubscriptionStatus.REVOKED:
@@ -72,11 +71,11 @@ class Subscription(Entity):
         self.status = SubscriptionStatus.REVOKED
         self.revoked_at = utc_now()
         self.suspended_at = None
-        self.updated_at = utc_now()
+        self._touch()
 
-    def _ensure_active_lifecycle(self, action: str) -> None:
+    def _ensure_active_lifecycle(self) -> None:
         if self.status in {SubscriptionStatus.REVOKED, SubscriptionStatus.DELETED}:
-            raise DomainStateError(f"subscription cannot {action} after terminal lifecycle state")
+            raise DomainStateError("subscription is in a terminal lifecycle state")
 
         if self.status == SubscriptionStatus.SUSPENDED:
             raise DomainStateError("subscription is already suspended")

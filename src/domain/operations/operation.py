@@ -1,16 +1,17 @@
 from typing import Any, Self
 
-from pydantic import AwareDatetime, Field, NonNegativeInt, PositiveInt, model_validator
+from pydantic import AwareDatetime, NonNegativeInt, PositiveInt, model_validator
 
 from domain.operations.enums import OperationStatus, OperationType
 from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.shared.time import utc_now
+from domain.shared.timestamps import TimestampedMixin
 from domain.shared.types import OptionalText, RequiredText
 
 
-class Operation(Entity):
+class Operation(Entity, TimestampedMixin):
     type: OperationType
     node_id: EntityId
     payload: dict[str, Any]
@@ -21,8 +22,6 @@ class Operation(Entity):
     started_at: AwareDatetime | None = None
     finished_at: AwareDatetime | None = None
     last_error: OptionalText = None
-    created_at: AwareDatetime = Field(default_factory=utc_now)
-    updated_at: AwareDatetime = Field(default_factory=utc_now)
 
     @model_validator(mode="after")
     def validate_attempt_limit(self) -> Self:
@@ -43,7 +42,7 @@ class Operation(Entity):
         self.started_at = now
         self.finished_at = None
         self.last_error = None
-        self.updated_at = now
+        self._touch()
 
     def succeed(self) -> None:
         self._ensure_claimed()
@@ -51,7 +50,7 @@ class Operation(Entity):
         self.status = OperationStatus.SUCCEEDED
         self.finished_at = now
         self.last_error = None
-        self.updated_at = now
+        self._touch()
 
     def fail_retryable(self, error_message: str | None = None) -> None:
         self._ensure_claimed()
@@ -60,7 +59,7 @@ class Operation(Entity):
         self.finished_at = now
         attempts_exhausted = self.attempts >= self.max_attempts
         self.status = OperationStatus.FAILED if attempts_exhausted else OperationStatus.PENDING
-        self.updated_at = now
+        self._touch()
 
     def fail_terminal(self, error_message: str | None = None) -> None:
         self._ensure_claimed()
@@ -68,7 +67,7 @@ class Operation(Entity):
         self.status = OperationStatus.FAILED
         self.finished_at = now
         self.last_error = error_message
-        self.updated_at = now
+        self._touch()
 
     def _ensure_claimed(self) -> None:
         if self.status != OperationStatus.CLAIMED:
