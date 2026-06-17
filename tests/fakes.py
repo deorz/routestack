@@ -5,9 +5,11 @@ from typing import Any
 from app_layer.ports.repositories import (
     AccessGrantRepository,
     AdminUserRepository,
+    AuditRecordRepository,
     ClientRepository,
     OperationRepository,
     SubscriptionRepository,
+    SubscriptionRevisionRepository,
 )
 from domain.admins.admin_user import AdminUser
 from domain.shared.entity_id import EntityId
@@ -49,6 +51,8 @@ class FakeUnitOfWork:
     subscriptions: SubscriptionRepository = field(default_factory=InMemoryRepository)
     access_grants: AccessGrantRepository = field(default_factory=InMemoryRepository)
     operations: OperationRepository = field(default_factory=InMemoryRepository)
+    subscription_revisions: SubscriptionRevisionRepository = field(default_factory=InMemoryRepository)
+    audit_records: AuditRecordRepository = field(default_factory=InMemoryRepository)
     commits: int = 0
     rollbacks: int = 0
     shutdowns: int = 0

@@ -3,7 +3,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from domain.shared.errors import DomainStateError
+from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.subscriptions.enums import SubscriptionStatus
 from domain.subscriptions.subscription import (
     Subscription,
@@ -24,7 +24,7 @@ def test_subscription_rejects_shared_public_id_and_token_hash() -> None:
 def test_subscription_bump_revision_records_revision_event() -> None:
     subscription = Subscription(
         client_id=uuid4(),
-        public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
+        public_id="public-id-test",
         access_token_hash="hash-abc",
         name="Starter",
         revision=7,
@@ -43,7 +43,7 @@ def test_subscription_bump_revision_records_revision_event() -> None:
 def test_subscription_suspend_resume_and_revoke_flow() -> None:
     subscription = Subscription(
         client_id=uuid4(),
-        public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
+        public_id="public-id-test",
         access_token_hash="hash-abc",
         name="Starter",
         status=SubscriptionStatus.ACTIVE,
@@ -62,7 +62,7 @@ def test_subscription_suspend_resume_and_revoke_flow() -> None:
 def test_subscription_revoke_is_idempotent() -> None:
     subscription = Subscription(
         client_id=uuid4(),
-        public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
+        public_id="public-id-test",
         access_token_hash="hash-abc",
         name="Starter",
         status=SubscriptionStatus.ACTIVE,
@@ -80,7 +80,7 @@ def test_subscription_revoke_is_idempotent() -> None:
 def test_subscription_rejects_resume_after_revocation() -> None:
     subscription = Subscription(
         client_id=uuid4(),
-        public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
+        public_id="public-id-test",
         access_token_hash="hash-abc",
         name="Starter",
         status=SubscriptionStatus.REVOKED,
@@ -88,3 +88,47 @@ def test_subscription_rejects_resume_after_revocation() -> None:
 
     with pytest.raises(DomainStateError):
         subscription.resume()
+
+
+def test_subscription_rotate_token_updates_hash_and_bumps_revision() -> None:
+    subscription = Subscription(
+        client_id=uuid4(),
+        public_id="public-id-test",
+        access_token_hash="hash-abc",
+        name="Starter",
+        status=SubscriptionStatus.ACTIVE,
+        revision=3,
+    )
+
+    event = subscription.rotate_token("routestack-sha256$def456")
+
+    assert subscription.access_token_hash == "routestack-sha256$def456"
+    assert subscription.revision == 4
+    assert isinstance(event, SubscriptionRevisionCreated)
+    assert event.safe_change_summary == "rotated access token"
+
+
+def test_subscription_rotate_token_rejects_same_hash() -> None:
+    subscription = Subscription(
+        client_id=uuid4(),
+        public_id="public-id-test",
+        access_token_hash="hash-abc",
+        name="Starter",
+        status=SubscriptionStatus.ACTIVE,
+    )
+
+    with pytest.raises(DomainStateError):
+        subscription.rotate_token("hash-abc")
+
+
+def test_subscription_rotate_token_rejects_hash_matching_public_id() -> None:
+    subscription = Subscription(
+        client_id=uuid4(),
+        public_id="public-id-test",
+        access_token_hash="hash-abc",
+        name="Starter",
+        status=SubscriptionStatus.ACTIVE,
+    )
+
+    with pytest.raises(DomainValidationError):
+        subscription.rotate_token("public-id-test")

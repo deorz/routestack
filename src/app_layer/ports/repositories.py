@@ -3,8 +3,10 @@ from typing import Protocol, runtime_checkable
 from domain.access_grants.access_grant import AccessGrant
 from domain.admins.admin_user import AdminUser
 from domain.clients.client import Client
+from domain.operations.audit import AuditRecord
 from domain.operations.operation import Operation
 from domain.shared.entity_id import EntityId
+from domain.subscriptions.revision import SubscriptionRevision
 from domain.subscriptions.subscription import Subscription
 
 
@@ -43,3 +45,17 @@ class OperationRepository(Protocol):
     def add(self, operation: Operation) -> None: ...
 
     def get(self, operation_id: EntityId) -> Operation | None: ...
+
+
+@runtime_checkable
+class SubscriptionRevisionRepository(Protocol):
+    def add(self, revision: SubscriptionRevision) -> None: ...
+
+    def get(self, revision_id: EntityId) -> SubscriptionRevision | None: ...
+
+
+@runtime_checkable
+class AuditRecordRepository(Protocol):
+    def add(self, audit_record: AuditRecord) -> None: ...
+
+    def get(self, audit_record_id: EntityId) -> AuditRecord | None: ...

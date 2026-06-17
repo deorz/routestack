@@ -6,9 +6,11 @@ from sqlalchemy.orm import Session, sessionmaker
 from infra.db.repositories import (
     SqlAlchemyAccessGrantRepository,
     SqlAlchemyAdminUserRepository,
+    SqlAlchemyAuditRecordRepository,
     SqlAlchemyClientRepository,
     SqlAlchemyOperationRepository,
     SqlAlchemySubscriptionRepository,
+    SqlAlchemySubscriptionRevisionRepository,
 )
 
 
@@ -23,6 +25,8 @@ class SqlAlchemyUnitOfWork:
         self.subscriptions = SqlAlchemySubscriptionRepository(self.session)
         self.access_grants = SqlAlchemyAccessGrantRepository(self.session)
         self.operations = SqlAlchemyOperationRepository(self.session)
+        self.subscription_revisions = SqlAlchemySubscriptionRevisionRepository(self.session)
+        self.audit_records = SqlAlchemyAuditRecordRepository(self.session)
         return self
 
     def __exit__(

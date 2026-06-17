@@ -8,4 +8,4 @@ class DatetimeMixin:
     updated_at: AwareDatetime = Field(default_factory=utc_now)
 
     def _record_update(self) -> None:
-        self.created_at = utc_now()
+        self.updated_at = utc_now()

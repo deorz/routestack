@@ -4,9 +4,11 @@ from typing import Protocol, Self, runtime_checkable
 from app_layer.ports.repositories import (
     AccessGrantRepository,
     AdminUserRepository,
+    AuditRecordRepository,
     ClientRepository,
     OperationRepository,
     SubscriptionRepository,
+    SubscriptionRevisionRepository,
 )
 
 
@@ -17,6 +19,8 @@ class UnitOfWork(Protocol):
     subscriptions: SubscriptionRepository
     access_grants: AccessGrantRepository
     operations: OperationRepository
+    subscription_revisions: SubscriptionRevisionRepository
+    audit_records: AuditRecordRepository
 
     def __enter__(self) -> Self: ...
 
