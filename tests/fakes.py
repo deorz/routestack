@@ -12,10 +12,10 @@ from app_layer.ports.repositories import (
     SubscriptionRepository,
     SubscriptionRevisionRepository,
 )
-from domain.shared.entity import Entity
 from domain.admins.admin_user import AdminUser
 from domain.operations.enums import OperationStatus
 from domain.operations.operation import Operation
+from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
 
 
