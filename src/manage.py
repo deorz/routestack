@@ -1,3 +1,5 @@
+import sys
+
 import uvicorn
 from pydantic import BaseModel
 
@@ -25,10 +27,14 @@ def run_server() -> None:
     uvicorn.run(**UvicornConfig.from_settings(settings).model_dump())
 
 
-def main() -> None:
-    run_server()
-
-
-def main_worker() -> None:
+def run_operation_worker() -> None:
     settings = create_container().settings()
     run_worker(settings.REDIS.URL)
+
+
+if __name__ == "__main__":
+    mode = sys.argv[1] if len(sys.argv) > 1 else "web"
+    if mode == "worker":
+        run_operation_worker()
+    else:
+        run_server()
