@@ -12,6 +12,7 @@ from app_layer.ports.repositories import (
     SubscriptionRepository,
     SubscriptionRevisionRepository,
 )
+from domain.shared.entity import Entity
 from domain.admins.admin_user import AdminUser
 from domain.operations.enums import OperationStatus
 from domain.operations.operation import Operation
@@ -83,6 +84,9 @@ class FakeUnitOfWork:
     commits: int = 0
     rollbacks: int = 0
     shutdowns: int = 0
+
+    def track(self, entity: Entity) -> None:
+        pass
 
     def __enter__(self) -> "FakeUnitOfWork":
         return self
