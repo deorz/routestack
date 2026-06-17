@@ -3,12 +3,9 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from domain.shared.errors import DomainStateError
+from domain.shared.errors import DomainStateError, DomainValidationError
 from domain.subscriptions.enums import SubscriptionStatus
-from domain.subscriptions.subscription import (
-    Subscription,
-    SubscriptionRevisionCreated,
-)
+from domain.subscriptions.subscription import Subscription, SubscriptionRevisionCreated
 
 
 def test_subscription_rejects_shared_public_id_and_token_hash() -> None:
@@ -21,70 +18,71 @@ def test_subscription_rejects_shared_public_id_and_token_hash() -> None:
         )
 
 
-def test_subscription_bump_revision_records_revision_event() -> None:
-    subscription = Subscription(
-        client_id=uuid4(),
-        public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
-        access_token_hash="hash-abc",
-        name="Starter",
-        revision=7,
-    )
+def test_subscription_bump_revision_records_revision_event(subscription: Subscription) -> None:
+    sub = subscription.model_copy(update={"revision": 7})
 
-    event = subscription.bump_revision("added a new access grant")
+    event = sub.bump_revision("added a new access grant")
 
-    assert subscription.revision == 8
+    assert sub.revision == 8
     assert isinstance(event, SubscriptionRevisionCreated)
-    assert event.subscription_id == subscription.id
+    assert event.subscription_id == sub.id
     assert event.revision == 8
     assert event.safe_change_summary == "added a new access grant"
-    assert subscription.pull_domain_events() == (event,)
+    assert sub.pull_domain_events() == (event,)
 
 
-def test_subscription_suspend_resume_and_revoke_flow() -> None:
-    subscription = Subscription(
-        client_id=uuid4(),
-        public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
-        access_token_hash="hash-abc",
-        name="Starter",
-        status=SubscriptionStatus.ACTIVE,
-    )
+def test_subscription_suspend_resume_and_revoke_flow(subscription: Subscription) -> None:
+    sub = subscription.model_copy(update={"status": SubscriptionStatus.ACTIVE})
 
-    subscription.suspend()
-    assert subscription.status == SubscriptionStatus.SUSPENDED
+    sub.suspend()
+    assert sub.status == SubscriptionStatus.SUSPENDED
 
-    subscription.resume()
-    assert subscription.status == SubscriptionStatus.ACTIVE
+    sub.resume()
+    assert sub.status == SubscriptionStatus.ACTIVE
 
-    subscription.revoke()
-    assert subscription.status == SubscriptionStatus.REVOKED
+    sub.revoke()
+    assert sub.status == SubscriptionStatus.REVOKED
 
 
-def test_subscription_revoke_is_idempotent() -> None:
-    subscription = Subscription(
-        client_id=uuid4(),
-        public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
-        access_token_hash="hash-abc",
-        name="Starter",
-        status=SubscriptionStatus.ACTIVE,
-    )
+def test_subscription_revoke_is_idempotent(subscription: Subscription) -> None:
+    sub = subscription.model_copy(update={"status": SubscriptionStatus.ACTIVE})
 
-    subscription.revoke()
-    revoked_at = subscription.revoked_at
+    sub.revoke()
+    revoked_at = sub.revoked_at
 
-    subscription.revoke()
+    sub.revoke()
 
-    assert subscription.status == SubscriptionStatus.REVOKED
-    assert subscription.revoked_at == revoked_at
+    assert sub.status == SubscriptionStatus.REVOKED
+    assert sub.revoked_at == revoked_at
 
 
-def test_subscription_rejects_resume_after_revocation() -> None:
-    subscription = Subscription(
-        client_id=uuid4(),
-        public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
-        access_token_hash="hash-abc",
-        name="Starter",
-        status=SubscriptionStatus.REVOKED,
-    )
+def test_subscription_rejects_resume_after_revocation(subscription: Subscription) -> None:
+    sub = subscription.model_copy(update={"status": SubscriptionStatus.REVOKED})
 
     with pytest.raises(DomainStateError):
-        subscription.resume()
+        sub.resume()
+
+
+def test_subscription_rotate_token_updates_hash_and_bumps_revision(subscription: Subscription) -> None:
+    sub = subscription.model_copy(update={"status": SubscriptionStatus.ACTIVE, "revision": 3})
+
+    event = sub.rotate_token("routestack-sha256$def456")
+
+    assert sub.access_token_hash == "routestack-sha256$def456"
+    assert sub.revision == 4
+    assert isinstance(event, SubscriptionRevisionCreated)
+    assert event.safe_change_summary == "rotated access token"
+
+
+def test_subscription_rotate_token_rejects_same_hash(subscription: Subscription) -> None:
+    sub = subscription.model_copy(update={"status": SubscriptionStatus.ACTIVE})
+
+    with pytest.raises(DomainStateError):
+        sub.rotate_token("hash-abc")
+
+
+def test_subscription_rotate_token_rejects_hash_matching_public_id(subscription: Subscription) -> None:
+    sub = subscription.model_copy(update={"status": SubscriptionStatus.ACTIVE})
+
+    with pytest.raises(DomainValidationError):
+        sub.rotate_token("public-id-test")

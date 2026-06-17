@@ -47,6 +47,15 @@ class Subscription(Entity, DatetimeMixin):
         self.record_domain_event(event)
         return event
 
+    def rotate_token(self, new_token_hash: str) -> SubscriptionRevisionCreated:
+        self._ensure_active_lifecycle()
+        if new_token_hash == self.access_token_hash:
+            raise DomainStateError("new token hash must differ from current")
+        if new_token_hash == self.public_id:
+            raise DomainValidationError("access_token_hash must differ from public_id")
+        self.access_token_hash = new_token_hash
+        return self.bump_revision("rotated access token")
+
     def suspend(self) -> None:
         self._ensure_active_lifecycle()
         self.status = SubscriptionStatus.SUSPENDED

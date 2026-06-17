@@ -84,3 +84,38 @@ class OperationOrm(Base):
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class SubscriptionRevisionOrm(Base):
+    __tablename__ = "subscription_revisions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    subscription_id: Mapped[str] = mapped_column(ForeignKey("subscriptions.id"), nullable=False, index=True)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    safe_change_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_by: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class AuditRecordOrm(Base):
+    __tablename__ = "audit_records"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    actor_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    action: Mapped[str] = mapped_column(Text, nullable=False)
+    entity_type: Mapped[str] = mapped_column(Text, nullable=False)
+    entity_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    audit_metadata: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", MutableDict.as_mutable(JSON), nullable=False, default=dict
+    )
+    source_ip: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class OutboxMessageOrm(Base):
+    __tablename__ = "outbox_messages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    event_type: Mapped[str] = mapped_column(Text, nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

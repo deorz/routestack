@@ -2,7 +2,10 @@ from app_layer.admins.exceptions import AdminUserIncorrectPasswordError, AdminUs
 from app_layer.ports.security import PasswordHasher
 from app_layer.ports.unit_of_work import UnitOfWork
 from domain.admins.admin_user import AdminUser
+from domain.operations.audit import AuditAction, AuditRecord
+from domain.shared.entity import Entity
 from domain.shared.entity_id import EntityId
+from domain.shared.time import utc_now
 
 
 class AdminAuthService:
@@ -21,6 +24,7 @@ class AdminAuthService:
                 admin_user.password_hash = password_hash
 
             self._unit_of_work.admins.add(admin_user)
+            self._record_audit(AuditAction.ADMIN_BOOTSTRAP, admin_user)
             return admin_user
 
     def authenticate(self, *, login: str, password: str) -> AdminUser:
@@ -34,6 +38,7 @@ class AdminAuthService:
 
             admin_user.record_login()
             self._unit_of_work.admins.add(admin_user)
+            self._record_audit(AuditAction.ADMIN_LOGIN, admin_user, actor=admin_user)
             return admin_user
 
     def get_enabled_user(self, admin_user_id: EntityId) -> AdminUser:
@@ -43,3 +48,19 @@ class AdminAuthService:
                 raise AdminUserNotFoundError
 
             return admin_user
+
+    def _record_audit(
+        self,
+        action: AuditAction,
+        entity: Entity,
+        *,
+        actor: Entity | None = None,
+    ) -> None:
+        record = AuditRecord(
+            actor_id=actor.id if actor else None,
+            action=action,
+            entity_type=type(entity).__name__,
+            entity_id=entity.id,
+            created_at=utc_now(),
+        )
+        self._unit_of_work.audit_records.add(record)

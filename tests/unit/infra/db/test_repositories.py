@@ -29,7 +29,7 @@ def test_repositories_round_trip_domain_entities(tmp_path: Path) -> None:
     subscription = Subscription(
         id=UUID("00000000-0000-0000-0000-000000000011"),
         client_id=client.id,
-        public_id="SUB-01JXYZ8DQ7YQ8S3H63HPS6TKX4",
+        public_id="public-id-test",
         access_token_hash="hash-abc",
         name="Starter",
         status=SubscriptionStatus.DEGRADED,

@@ -1,27 +1,10 @@
-from config import AdminSessionSettings, AppSettings, Config, DatabaseSettings, SecuritySettings
-from infra.db import Base
+from fastapi.testclient import TestClient
 
 
-def _database_url(tmp_path, name: str) -> str:
-    return f"sqlite:///{tmp_path / name}"
-
-
-def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_client_factory, tmp_path) -> None:
-    settings = Config(
-        APP=AppSettings(NAME="InjectedStack"),
-        DATABASE=DatabaseSettings(URL=_database_url(tmp_path, "admin-auth-flow.db")),
-        SECURITY=SecuritySettings(SECRET_KEY="integration-secret"),
-        ADMIN_SESSION=AdminSessionSettings(TTL_SECONDS=AdminSessionSettings.DEFAULT_TTL_SECONDS),
-    )
-    client = app_client_factory(settings)
+def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(seeded_app_client: TestClient) -> None:
+    client = seeded_app_client
     container = client.app.state.container
-    engine = container.db_engine()
-    Base.metadata.create_all(engine)
-
-    container.admin_auth_service().bootstrap_user(
-        login="root",
-        password="secret-123",
-    )
+    settings = container.settings()
 
     login_page = client.get("/admin/login")
     assert login_page.status_code == 200
@@ -52,22 +35,8 @@ def test_admin_login_flow_sets_session_cookie_and_protects_admin_route(app_clien
     assert after_logout.status_code == 401
 
 
-def test_admin_login_rejects_invalid_credentials_without_disclosing_reason(app_client_factory, tmp_path) -> None:
-    client = app_client_factory(
-        Config(
-            APP=AppSettings(),
-            DATABASE=DatabaseSettings(URL=_database_url(tmp_path, "admin-auth-invalid.db")),
-            SECURITY=SecuritySettings(SECRET_KEY="integration-secret"),
-        )
-    )
-    container = client.app.state.container
-    engine = container.db_engine()
-    Base.metadata.create_all(engine)
-
-    container.admin_auth_service().bootstrap_user(
-        login="root",
-        password="secret-123",
-    )
+def test_admin_login_rejects_invalid_credentials_without_disclosing_reason(seeded_app_client: TestClient) -> None:
+    client = seeded_app_client
 
     wrong_password = client.post(
         "/admin/login",

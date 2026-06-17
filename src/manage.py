@@ -24,5 +24,5 @@ def run_server() -> None:
     uvicorn.run(**UvicornConfig.from_settings(settings).model_dump())
 
 
-def main() -> None:
+if __name__ == "__main__":
     run_server()

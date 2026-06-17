@@ -1,12 +1,24 @@
 from infra.db.base import Base
-from infra.db.models import AccessGrantOrm, AdminUserOrm, ClientOrm, OperationOrm, SubscriptionOrm
+from infra.db.models import (
+    AccessGrantOrm,
+    AdminUserOrm,
+    AuditRecordOrm,
+    ClientOrm,
+    OperationOrm,
+    OutboxMessageOrm,
+    SubscriptionOrm,
+    SubscriptionRevisionOrm,
+)
 from infra.db.repositories import (
     SqlAlchemyAccessGrantRepository,
     SqlAlchemyAdminUserRepository,
+    SqlAlchemyAuditRecordRepository,
     SqlAlchemyClientRepository,
     SqlAlchemyOperationRepository,
+    SqlAlchemyOutboxMessageRepository,
     SqlAlchemyRepository,
     SqlAlchemySubscriptionRepository,
+    SqlAlchemySubscriptionRevisionRepository,
 )
 from infra.db.sqlite import (
     SQLITE_BUSY_TIMEOUT_MS,
@@ -19,17 +31,23 @@ __all__ = [
     "SQLITE_BUSY_TIMEOUT_MS",
     "AccessGrantOrm",
     "AdminUserOrm",
+    "AuditRecordOrm",
     "Base",
     "ClientOrm",
     "OperationOrm",
+    "OutboxMessageOrm",
     "SqlAlchemyAccessGrantRepository",
     "SqlAlchemyAdminUserRepository",
+    "SqlAlchemyAuditRecordRepository",
     "SqlAlchemyClientRepository",
     "SqlAlchemyOperationRepository",
+    "SqlAlchemyOutboxMessageRepository",
     "SqlAlchemyRepository",
     "SqlAlchemySubscriptionRepository",
+    "SqlAlchemySubscriptionRevisionRepository",
     "SqlAlchemyUnitOfWork",
     "SubscriptionOrm",
+    "SubscriptionRevisionOrm",
     "create_session_factory",
     "create_sqlite_engine",
 ]
